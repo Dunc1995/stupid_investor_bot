@@ -1,5 +1,5 @@
 import json
-from stupid_investor_bot import CREDENTIALS_PATH
+from stupidinvestorbot import CREDENTIALS_PATH
 
 
 class Credentials:
