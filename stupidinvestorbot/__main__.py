@@ -1,5 +1,4 @@
-from pprint import pprint
-import stupidinvestorbot.crypto as crypto
+import stupidinvestorbot.app as app
 
 if __name__ == "__main__":
-    pprint(crypto.get_valuation())
+    app.get_time_series_data()
