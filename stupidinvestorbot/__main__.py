@@ -1,10 +1,5 @@
-import json
-from stupidinvestorbot import REST_API
-from stupidinvestorbot.credentials import read_api_credentials
-from stupidinvestorbot.crypto import CryptoClient
+from pprint import pprint
+import stupidinvestorbot.crypto as crypto
 
 if __name__ == "__main__":
-    credentials = read_api_credentials()
-    client = CryptoClient(REST_API, credentials)
-
-    print(json.dumps(client.get_volatile_coins(), indent=4))
+    pprint(crypto.get_top_ten_gaining_coins())

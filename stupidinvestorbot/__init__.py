@@ -1,2 +1,6 @@
-CREDENTIALS_PATH = './cred.json'
-REST_API = 'https://api.crypto.com/exchange/v1/'
+import os
+
+# Prefix with CRYPTO incase additional API's are added.
+CRYPTO_KEY = os.environ.get('CRYPTO_KEY')
+CRYPTO_SECRET_KEY = os.environ.get('CRYPTO_SECRET_KEY')
+CRYPTO_REST_API = 'https://api.crypto.com/exchange/v1'
