@@ -6,26 +6,27 @@ from stupidinvestorbot import CRYPTO_REST_API, CRYPTO_KEY, CRYPTO_SECRET_KEY
 
 MAX_LEVEL = 3
 
+
+def params_to_str(obj, level):
+    if level >= MAX_LEVEL:
+        return str(obj)
+
+    return_str = ""
+    for key in sorted(obj):
+        return_str += key
+        if obj[key] is None:
+            return_str += 'null'
+        elif isinstance(obj[key], list):
+            for subObj in obj[key]:
+                return_str += params_to_str(subObj, level + 1)
+        else:
+            return_str += str(obj[key])
+    return return_str
+
+
 def get_signature(req : dict) -> str:
     # First ensure the params are alphabetically sorted by key
     param_str = ""
-
-    def params_to_str(obj, level):
-        if level >= MAX_LEVEL:
-            return str(obj)
-
-        return_str = ""
-        for key in sorted(obj):
-            return_str += key
-            if obj[key] is None:
-                return_str += 'null'
-            elif isinstance(obj[key], list):
-                for subObj in obj[key]:
-                    return_str += params_to_str(subObj, level + 1)
-            else:
-                return_str += str(obj[key])
-        return return_str
-
 
     if "params" in req:
         param_str = params_to_str(req['params'], 0)

@@ -4,6 +4,7 @@ import stupidinvestorbot.auth as auth
 from stupidinvestorbot import CRYPTO_REST_API
 from stupidinvestorbot.models import Ticker
 
+
 def user_balance() -> str:
     return auth.post_request(1, 'user-balance')
 
