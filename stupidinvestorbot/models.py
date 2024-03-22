@@ -26,3 +26,14 @@ class Ticker():
         self.best_ask_price = obj['k']
         self.open_interest = obj['oi']
         self.timestamp = obj['t']
+
+
+@dataclass
+class CoinSummary():
+    name: str
+    latest_trade : float
+    mean_24h : float
+    std_24h : float
+    percentage_std_24h : float
+    is_greater_than_mean : bool
+    is_greater_than_std : bool

@@ -6,26 +6,28 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import stupidinvestorbot.crypto as crypto
-from stupidinvestorbot.models import Ticker
+from stupidinvestorbot.models import CoinSummary, Ticker
 
 
-def get_summary(coin : Ticker, valuation : DataFrame) -> dict:
+def get_summary(coin : Ticker, valuation : DataFrame) -> CoinSummary:
     stats = valuation
     mean = stats['v'].mean()
     std = stats['v'].std()
     percentage_std = float(std) / float(mean)
 
-    return {
-        'latest_trade': float(coin.latest_trade),
-        'mean_24h': mean,
-        'std_24h': std,
-        'percentage_std_24h': percentage_std,
-        'is_greater_than_mean': bool(float(coin.latest_trade) - mean > 0),
-        'is_greater_than_std': bool(float(coin.latest_trade) - (mean + std) > 0) 
-        }
+    return CoinSummary(
+        name = coin.instrument_name,
+        latest_trade = float(coin.latest_trade),
+        mean_24h = mean,
+        std_24h = std,
+        percentage_std_24h = percentage_std,
+        is_greater_than_mean = bool(float(coin.latest_trade) - mean > 0),
+        is_greater_than_std = bool(float(coin.latest_trade) - (mean + std) > 0) 
+        )
 
 
-def get_time_series_data(show_plots=False):
+def get_coin_summaries(show_plots=False):
+    output = []
     axs = None
     coin_number = 10
     i = 0
@@ -46,10 +48,11 @@ def get_time_series_data(show_plots=False):
             axs[i].set_title(coin.instrument_name)
             axs[i].xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y'))
 
-        with open(os.path.join('output', f'''{coin.instrument_name}.json'''), 'w+') as f:
-            f.write(json.dumps(get_summary(coin, df), indent=4))
+        output.append(get_summary(coin, df))
 
         i += 1
 
     if show_plots:
         plt.show()
+    
+    return pd.DataFrame(output)
