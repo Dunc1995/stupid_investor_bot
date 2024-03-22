@@ -7,7 +7,7 @@ import stupidinvestorbot.crypto as crypto
 from stupidinvestorbot.models import CoinSummary, Ticker
 
 
-def get_summary(coin: Ticker, valuation: DataFrame) -> CoinSummary:
+def __get_summary(coin: Ticker, valuation: DataFrame) -> CoinSummary:
     stats = valuation
     mean = stats["v"].mean()
     std = stats["v"].std()
@@ -32,7 +32,7 @@ def get_coin_summaries(show_plots=False):
     coin_summaries = crypto.get_highest_gain_coins(coin_number)
 
     if show_plots:
-        fig, axs = plt.subplots(coin_number)
+        _, axs = plt.subplots(coin_number)
 
     for coin in coin_summaries:
         time_series_data = crypto.get_valuation(coin.instrument_name, "mark_price")
@@ -46,11 +46,17 @@ def get_coin_summaries(show_plots=False):
             axs[i].set_title(coin.instrument_name)
             axs[i].xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
 
-        output.append(get_summary(coin, df))
+        output.append(__get_summary(coin, df))
 
         i += 1
 
     if show_plots:
         plt.show()
 
-    return pd.DataFrame(output)
+    print(pd.DataFrame(output))
+
+
+def monitor_coin(instrument_name: str):
+    result = crypto.get_instrument_summary(instrument_name)
+
+    print(result)

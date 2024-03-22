@@ -25,6 +25,14 @@ def get_highest_gain_coins(number_of_coins: int) -> list[Ticker]:
     return result
 
 
+def get_instrument_summary(instrument_name: str):
+    response = requests.get(api(f"""get-tickers?instrument_name={instrument_name}"""))
+
+    data = [Ticker(obj) for obj in json.loads(response.text)["result"]["data"]]
+
+    return data[0]
+
+
 def get_valuation(instrument_name: str, valuation_type: str) -> dict:
     to_unix = lambda x: int(time.mktime(x.timetuple()) * 1000)
 

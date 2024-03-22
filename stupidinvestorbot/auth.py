@@ -7,7 +7,7 @@ from stupidinvestorbot import CRYPTO_REST_API, CRYPTO_KEY, CRYPTO_SECRET_KEY
 MAX_LEVEL = 3
 
 
-def params_to_str(obj, level):
+def __params_to_str(obj, level):
     if level >= MAX_LEVEL:
         return str(obj)
 
@@ -18,13 +18,13 @@ def params_to_str(obj, level):
             return_str += "null"
         elif isinstance(obj[key], list):
             for subObj in obj[key]:
-                return_str += params_to_str(subObj, level + 1)
+                return_str += __params_to_str(subObj, level + 1)
         else:
             return_str += str(obj[key])
     return return_str
 
 
-def get_signature(req: dict) -> str:
+def __get_signature(req: dict) -> str:
     # First ensure the params are alphabetically sorted by key
     param_str = ""
 
@@ -51,7 +51,7 @@ def post_request(id: int, method: str, params={}) -> str:
         "nonce": int(time.time() * 1000),
     }
 
-    req["sig"] = get_signature(req)
+    req["sig"] = __get_signature(req)
 
     headers = {"Content-Type": "application/json"}
 
