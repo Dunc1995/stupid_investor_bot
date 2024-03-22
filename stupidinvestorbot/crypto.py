@@ -30,7 +30,7 @@ def get_valuation(instrument_name : str, valuation_type : str) -> dict:
 
     response = requests.get(api(f'''get-valuations?instrument_name={instrument_name}&valuation_type={valuation_type}&count=10000'''))
 
-    if (response.status_code != 200):
+    if response.status_code != 200:
         print(response.text)
 
         raise ValueError('Unable to process data')
