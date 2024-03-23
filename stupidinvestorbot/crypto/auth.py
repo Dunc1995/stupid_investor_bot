@@ -2,7 +2,7 @@ import hashlib
 import time
 import requests
 import hmac
-from stupidinvestorbot import CRYPTO_REST_API, CRYPTO_KEY, CRYPTO_SECRET_KEY
+from stupidinvestorbot.crypto import CRYPTO_REST_API, CRYPTO_KEY, CRYPTO_SECRET_KEY
 
 MAX_LEVEL = 3
 
@@ -25,6 +25,10 @@ def __params_to_str(obj, level):
 
 
 def __get_signature(req: dict) -> str:
+    """
+    See https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html#digital-signature
+    """
+
     # First ensure the params are alphabetically sorted by key
     param_str = ""
 
@@ -45,7 +49,7 @@ def __get_signature(req: dict) -> str:
 def post_request(id: int, method: str, params={}) -> str:
     req = {
         "id": id,
-        "method": method,
+        "method": "private/" + method,
         "api_key": CRYPTO_KEY,
         "params": params,
         "nonce": int(time.time() * 1000),
@@ -58,5 +62,8 @@ def post_request(id: int, method: str, params={}) -> str:
     result = requests.post(
         f"""{CRYPTO_REST_API}/private/{method}""", json=req, headers=headers
     )
+
+    if result.status_code != 200:
+        raise ValueError(result.text)
 
     return result.text

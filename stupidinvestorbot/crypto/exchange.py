@@ -1,14 +1,9 @@
 import json
 import requests
-import stupidinvestorbot.auth as auth
-from stupidinvestorbot import CRYPTO_REST_API
+from stupidinvestorbot.crypto import CRYPTO_REST_API
 from stupidinvestorbot.models import Ticker
 
 api = lambda action: f"""{CRYPTO_REST_API}/public/{action}"""
-
-
-def user_balance() -> str:
-    return auth.post_request(1, "user-balance")
 
 
 def get_highest_gain_coins(number_of_coins: int) -> list[Ticker]:
@@ -18,7 +13,7 @@ def get_highest_gain_coins(number_of_coins: int) -> list[Ticker]:
 
     result = sorted(data, key=lambda x: tuple(x.percentage_change_24h))[
         -number_of_coins:
-    ]
+    ]  # TODO Add error handling here.
 
     return result
 

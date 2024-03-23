@@ -2,6 +2,45 @@ from dataclasses import dataclass
 
 
 @dataclass
+class PositionBalance:
+    instrument_name: str
+    quantity: float
+    market_value: float
+    collateral_eligible: bool
+    haircut: float
+    collateral_amount: float
+    max_withdrawal_balance: float
+    reserved_qty: float
+    hourly_interest_rate: float
+
+
+@dataclass
+class UserBalance:
+    total_available_balance: float
+    total_margin_balance: float
+    total_initial_margin: float
+    total_position_im: float
+    total_haircut: float
+    total_maintenance_margin: float
+    total_position_cost: float
+    total_cash_balance: float
+    total_collateral_value: float
+    total_session_unrealized_pnl: float
+    instrument_name: str
+    total_session_realized_pnl: float
+    is_liquidating: bool
+    credit_limits: list
+    total_effective_leverage: float
+    total_borrow: float
+    position_limit: float
+    used_position_limit: float
+    position_balances: list[PositionBalance]
+    has_risk: bool
+    terminatable: bool
+    margin_score: float
+
+
+@dataclass
 class Ticker:
     instrument_name: str
     highest_trade_24h: str
