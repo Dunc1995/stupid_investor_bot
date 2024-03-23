@@ -29,7 +29,7 @@ def __get_signature(req: dict) -> str:
     param_str = ""
 
     if "params" in req:
-        param_str = params_to_str(req["params"], 0)
+        param_str = __params_to_str(req["params"], 0)
 
     payload_str = (
         req["method"] + str(req["id"]) + req["api_key"] + param_str + str(req["nonce"])

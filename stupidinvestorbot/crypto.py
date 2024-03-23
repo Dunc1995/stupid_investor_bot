@@ -1,7 +1,5 @@
 import json
 import requests
-import datetime as dt
-import time
 import stupidinvestorbot.auth as auth
 from stupidinvestorbot import CRYPTO_REST_API
 from stupidinvestorbot.models import Ticker
@@ -25,20 +23,28 @@ def get_highest_gain_coins(number_of_coins: int) -> list[Ticker]:
     return result
 
 
-def get_instrument_summary(instrument_name: str):
+def get_instrument_summary(instrument_name: str) -> Ticker:
+    """
+    Get trading summary data for the input crypto currency name.
+    """
     response = requests.get(api(f"""get-tickers?instrument_name={instrument_name}"""))
 
-    data = [Ticker(obj) for obj in json.loads(response.text)["result"]["data"]]
+    data = [
+        Ticker(obj) for obj in json.loads(response.text)["result"]["data"]
+    ]  # TODO add error handling here.
 
     return data[0]
 
 
 def get_valuation(instrument_name: str, valuation_type: str) -> dict:
-    to_unix = lambda x: int(time.mktime(x.timetuple()) * 1000)
+    # ! start/end time query parameters don't seem to work hence the following being commented out
+    # to_unix = lambda x: int(time.mktime(x.timetuple()) * 1000)
 
-    date_now = to_unix(dt.datetime.now())
-    date_past = to_unix(dt.datetime.now() - dt.timedelta(days=1))
+    # date_now = to_unix(dt.datetime.now())
+    # date_past = to_unix(dt.datetime.now() - dt.timedelta(days=1))
 
+    # * count query max ~4000 data points going back 24h
+    # TODO attempt to retrieve data >24h ago.
     response = requests.get(
         api(
             f"""get-valuations?instrument_name={instrument_name}&valuation_type={valuation_type}&count=10000"""
