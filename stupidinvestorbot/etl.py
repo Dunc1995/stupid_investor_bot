@@ -54,7 +54,7 @@ def get_coin_summary(coin: Ticker, valuation: DataFrame) -> CoinSummary:
 def get_coin_summaries(show_plots=False):
     output = []
     axs = None
-    coin_number = 10
+    coin_number = 20
     i = 0
     coin_summaries = exchange.get_highest_gain_coins(coin_number)
 
@@ -80,4 +80,4 @@ def get_coin_summaries(show_plots=False):
     if show_plots:
         plt.show()
 
-    return pd.DataFrame(output)
+    return output
