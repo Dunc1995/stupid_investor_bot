@@ -1,4 +1,5 @@
 import hashlib
+import json
 import time
 import requests
 import hmac
@@ -54,6 +55,8 @@ def post_request(id: int, method: str, params={}) -> str:
         "params": params,
         "nonce": int(time.time() * 1000),
     }
+
+    print("I got here with: " + json.dumps(req, indent=4))
 
     req["sig"] = __get_signature(req)
 

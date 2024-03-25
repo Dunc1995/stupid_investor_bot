@@ -72,6 +72,7 @@ class Ticker:
 class CoinSummary:
     name: str
     latest_trade: float
+    traded_volume_24h: float
     mean_24h: float
     std_24h: float
     percentage_std_24h: float

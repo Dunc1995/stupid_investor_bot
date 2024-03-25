@@ -43,6 +43,7 @@ def get_coin_summary(coin: Ticker, valuation: DataFrame) -> CoinSummary:
     return CoinSummary(
         name=coin.instrument_name,
         latest_trade=float(coin.latest_trade),
+        traded_volume_24h=float(coin.total_traded_volume_24h),
         mean_24h=mean,
         std_24h=std,
         percentage_std_24h=percentage_std,
@@ -51,10 +52,10 @@ def get_coin_summary(coin: Ticker, valuation: DataFrame) -> CoinSummary:
     )
 
 
-def get_coin_summaries(show_plots=False):
+def get_coin_summaries(show_plots=False) -> list[CoinSummary]:
     output = []
     axs = None
-    coin_number = 20
+    coin_number = 30
     i = 0
     coin_summaries = exchange.get_highest_gain_coins(coin_number)
 
