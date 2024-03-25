@@ -15,7 +15,7 @@ def buy_order(
 
     divisor = "1"
     remainder = 0.0
-    while remainder == 0.0:
+    while remainder == 0.0:  # TODO - needs fixing. can shit the bed quite easily.
         remainder = float(traded_volume_24h) % float(divisor)
 
         if remainder == 0.0:
