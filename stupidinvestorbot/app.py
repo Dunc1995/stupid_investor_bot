@@ -2,14 +2,17 @@ from stupidinvestorbot.crypto import exchange, user
 from stupidinvestorbot import INVESTMENT_INCREMENT, etl
 from stupidinvestorbot.models import CoinSummary
 
+INSTRUMENT_PROPERTIES = None
+
 
 def scan_investment_options():
     allocated_coins: list[CoinSummary] = []
+    instrument_properties = exchange.get_instrument_properties()
     total_investable, increments = etl.get_investment_increments()
 
     all_coins = etl.get_coin_summaries()
 
-    sub_coins = [coin for coin in all_coins if "_USDT" not in coin.name]
+    sub_coins = [coin for coin in all_coins if coin.name.endswith("_USD")]
 
     coin_summaries_std = list(
         filter(lambda summary: not summary.is_greater_than_std, sub_coins)
@@ -48,11 +51,17 @@ Selected coins: {allocated_coins}
 
     if len(allocated_coins) == increments:
         for coin in allocated_coins:
+            coin_props = list(
+                filter(lambda x: x.symbol == coin.name, instrument_properties)
+            )[
+                0
+            ]  # TODO there's probably a cleaner way of doing this.
+
             user.buy_order(
                 coin.name,
                 INVESTMENT_INCREMENT,
                 coin.latest_trade,
-                coin.traded_volume_24h,
+                coin_props.qty_tick_size,
             )
             print(f"""Created order for {coin.name}.""")
 

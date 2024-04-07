@@ -1,7 +1,7 @@
 import json
 import requests
 from stupidinvestorbot.crypto import CRYPTO_REST_API
-from stupidinvestorbot.models import Ticker
+from stupidinvestorbot.models import Ticker, Instrument
 
 api = lambda action: f"""{CRYPTO_REST_API}/public/{action}"""
 
@@ -16,6 +16,17 @@ def get_highest_gain_coins(number_of_coins: int) -> list[Ticker]:
     ]  # TODO Add error handling here.
 
     return result
+
+
+def get_instrument_properties():
+    """
+    Get trading summary data for the input crypto currency name.
+    """
+    response = requests.get(api(f"get-instruments"))
+
+    data = [Instrument(**obj) for obj in json.loads(response.text)["result"]["data"]]
+
+    return data
 
 
 def get_instrument_summary(instrument_name: str) -> Ticker:

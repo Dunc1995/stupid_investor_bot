@@ -1,5 +1,33 @@
 from stupidinvestorbot.crypto import auth
 import math
+import json
+
+
+buy_order_id = 1
+
+
+def __correct_amount_via_tick_size(amount: float, tick: float) -> float:
+    """
+    Precise amounts can cause the Crypto API to complain -
+    this corrects the amount using the input tick value.
+    """
+
+    _amount = float(amount)
+    _tick = float(tick)
+
+    remainder = _amount % _tick
+
+    return _amount - remainder
+
+
+def __get_coin_quantity(
+    instrument_price_usd: float, investment_total_usd: float, tick: float
+) -> float:
+    _instrument_price_usd = float(instrument_price_usd)
+
+    absolute_quantity = float(investment_total_usd) / _instrument_price_usd
+
+    return __correct_amount_via_tick_size(absolute_quantity, tick)
 
 
 def get_balance() -> str:
@@ -7,35 +35,37 @@ def get_balance() -> str:
 
 
 def buy_order(
-    instrument_name: str, price: float, market_price: float, traded_volume_24h: float
+    instrument_name: str,
+    investment_total_usd: float,
+    instrument_price_usd: float,
+    quantity_tick: float,
 ):
+    global buy_order_id
+    print("Quantity increment is: " + quantity_tick)
 
-    _market_price = float(market_price)
-    quantity = float(price) / _market_price
+    quantity = __get_coin_quantity(
+        instrument_price_usd, investment_total_usd, quantity_tick
+    )
 
-    divisor = "1"
-    remainder = 0.0
-    while remainder == 0.0:  # TODO - needs fixing. can shit the bed quite easily.
-        remainder = float(traded_volume_24h) % float(divisor)
-
-        if remainder == 0.0:
-            divisor = divisor + "0"
-
-    print("Quantity increment is: " + divisor)
-
-    increments = math.floor(quantity / float(divisor))
-    quantity = f"{increments * float(divisor)}"
+    print(f"Total quantity is: {quantity}")
+    print(f"Estimate order price (USD): {quantity*instrument_price_usd}")
 
     params = {
         "instrument_name": instrument_name,
         "side": "BUY",
         "type": "LIMIT",
-        "price": f"{_market_price:.10f}",
-        "quantity": quantity,
+        "price": f"{instrument_price_usd}",
+        "quantity": f"{quantity}",
         "time_in_force": "GOOD_TILL_CANCEL",
     }
 
-    return auth.post_request(2, "create-order", params)
+    print(json.dumps(params, indent=4))
+
+    result = auth.post_request(buy_order_id, "create-order", params)
+
+    buy_order_id += 1
+
+    return result
 
 
 # def cancel_order():

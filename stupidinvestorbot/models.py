@@ -72,9 +72,29 @@ class Ticker:
 class CoinSummary:
     name: str
     latest_trade: float
-    traded_volume_24h: float
     mean_24h: float
     std_24h: float
     percentage_std_24h: float
     is_greater_than_mean: bool
     is_greater_than_std: bool
+
+
+@dataclass
+class Instrument:
+    symbol: str
+    inst_type: str
+    display_name: str
+    base_ccy: str
+    quote_ccy: str
+    quote_decimals: int
+    quantity_decimals: int
+    price_tick_size: str
+    qty_tick_size: str
+    max_leverage: str
+    tradable: str
+    expiry_timestamp_ms: int
+    beta_product: bool
+    margin_buy_enabled: bool
+    margin_sell_enabled: bool
+    contract_size: str = None
+    underlying_symbol: str = None
