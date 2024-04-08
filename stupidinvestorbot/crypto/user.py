@@ -34,15 +34,18 @@ def get_balance() -> str:
     return auth.post_request(1, "user-balance")
 
 
-def buy_order(
+# ! TODO Streamline this
+def create_order(
     instrument_name: str,
     investment_total_usd: float,
     instrument_price_usd: float,
     quantity_tick: float,
+    side: str,
 ):
     global buy_order_id
     print("Quantity increment is: " + quantity_tick)
 
+    # TODO this needs fixing/testing - not foolproof
     quantity = __get_coin_quantity(
         instrument_price_usd, investment_total_usd, quantity_tick
     )
@@ -52,7 +55,7 @@ def buy_order(
 
     params = {
         "instrument_name": instrument_name,
-        "side": "BUY",
+        "side": side,
         "type": "LIMIT",
         "price": f"{instrument_price_usd}",
         "quantity": f"{quantity}",

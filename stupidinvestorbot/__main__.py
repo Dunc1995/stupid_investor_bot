@@ -1,5 +1,5 @@
 import argh
-from stupidinvestorbot.crypto import user, exchange
+from stupidinvestorbot.crypto import user, exchange, streams
 from stupidinvestorbot import etl
 import stupidinvestorbot.app as app
 
@@ -13,5 +13,6 @@ if __name__ == "__main__":
             etl.get_investment_increments,
             app.monitor_coin,
             app.scan_investment_options,
+            streams.orders,
         ]
     )

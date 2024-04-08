@@ -70,3 +70,16 @@ def post_request(id: int, method: str, params={}) -> str:
         raise ValueError(result.text)
 
     return result.text
+
+
+def get_websocket_authorization_data() -> dict:
+    req = {
+        "id": 1,
+        "method": "public/auth",
+        "api_key": CRYPTO_KEY,
+        "nonce": int(time.time() * 1000),
+    }
+
+    req["sig"] = __get_signature(req)
+
+    return req

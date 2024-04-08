@@ -26,6 +26,7 @@ def scan_investment_options():
         )
     )
 
+    # region Find the most volatile coins
     if len(coin_summaries_std) >= increments:
         while len(allocated_coins) < increments:
             if len(coin_summaries_mean) > 0:
@@ -39,6 +40,7 @@ def scan_investment_options():
             else:
                 print("Not enough coins")
                 break
+    # endregion
 
     print(
         f"""
@@ -57,11 +59,12 @@ Selected coins: {allocated_coins}
                 0
             ]  # TODO there's probably a cleaner way of doing this.
 
-            user.buy_order(
+            user.create_order(
                 coin.name,
                 INVESTMENT_INCREMENT,
                 coin.latest_trade,
                 coin_props.qty_tick_size,
+                "BUY",
             )
             print(f"""Created order for {coin.name}.""")
 

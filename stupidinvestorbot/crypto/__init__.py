@@ -4,3 +4,4 @@ import os
 CRYPTO_KEY = os.environ.get("CRYPTO_KEY")
 CRYPTO_SECRET_KEY = os.environ.get("CRYPTO_SECRET_KEY")
 CRYPTO_REST_API = "https://api.crypto.com/exchange/v1"
+CRYPTO_WEBSOCKET_USER = "wss://stream.crypto.com/exchange/v1/user"
