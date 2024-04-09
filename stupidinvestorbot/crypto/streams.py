@@ -1,26 +1,27 @@
-import json
 from typing import Dict
-from crypto_com import MarketClient, UserClient
+from crypto_com import MarketClient
 import asyncio
-import os
 import logging
-from stupidinvestorbot.crypto import CRYPTO_KEY, CRYPTO_SECRET_KEY, exchange, user
+
+from stupidinvestorbot.crypto.clients import HttpClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("client")
 
 
 # ! Buggy as fuck
-async def run():
-    balance = json.loads(user.get_balance())["result"]["data"][0]["position_balances"]
+async def run(http_client: HttpClient):
+    balance = http_client.user.get_balance()[0][
+        "position_balances"
+    ]  # ! zero index refers to master wallet
 
     ena_coin = list(filter(lambda x: x["instrument_name"] == "ENA", balance))[0]
 
     print(balance)
 
-    instrument_properties = exchange.get_instrument_properties()
+    instruments = http_client.market.get_instruments()
 
-    coin_props = list(filter(lambda x: x.symbol == "ENA_USD", instrument_properties))[0]
+    coin_props = list(filter(lambda x: x.symbol == "ENA_USD", instruments))[0]
 
     async with MarketClient() as client:
         await client.subscribe(["ticker.ENA_USD"])
@@ -40,7 +41,7 @@ async def run():
 
                         print(coin_props.qty_tick_size)
 
-                        user.create_order(
+                        http_client.user.create_order(
                             "ENA_USD",
                             float(coin_props.qty_tick_size) * latest_trade,
                             latest_trade,

@@ -1,18 +1,17 @@
+import os
 import argh
-from stupidinvestorbot.crypto import user, exchange, streams
-from stupidinvestorbot import etl
-import stupidinvestorbot.app as app
+from stupidinvestorbot.crypto import clients
+from stupidinvestorbot import app as app
+
+# Prefixed with CRYPTO incase additional API's are added.
+CRYPTO_KEY = os.environ.get("CRYPTO_KEY")
+CRYPTO_SECRET_KEY = os.environ.get("CRYPTO_SECRET_KEY")
+http_client = clients.HttpClient(CRYPTO_KEY, CRYPTO_SECRET_KEY)
+
+
+def main():
+    app.run(http_client)
+
 
 if __name__ == "__main__":
-    argh.dispatch_commands(
-        [
-            user.get_open_orders,
-            user.get_balance,
-            exchange.get_instrument_properties,
-            etl.get_coin_summaries,
-            etl.get_investment_increments,
-            app.monitor_coin,
-            app.scan_investment_options,
-            streams.orders,
-        ]
-    )
+    argh.dispatch_commands([main])
