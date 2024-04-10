@@ -1,3 +1,4 @@
+import logging
 import math
 import datetime as dt
 from typing import List
@@ -10,6 +11,10 @@ from stupidinvestorbot.crypto.clients.http.market import MarketHttpClient
 from stupidinvestorbot.crypto.clients.http.user import UserHttpClient
 from stupidinvestorbot.models.app import CoinSummary, Ticker
 from stupidinvestorbot.models.crypto import PositionBalance, UserBalance
+
+INVESTMENT_INCREMENTS = 20.0
+
+logger = logging.getLogger("client")
 
 
 class CryptoHttpClient:
@@ -56,7 +61,7 @@ class CryptoHttpClient:
 
         total_investable = float(usd_balance.market_value)
 
-        number_of_investments = math.floor(total_investable / 40.0)
+        number_of_investments = math.floor(total_investable / INVESTMENT_INCREMENTS)
 
         return total_investable, number_of_investments
 
@@ -65,12 +70,15 @@ class CryptoHttpClient:
         axs = None
         coin_number = 30
         i = 0
+
         coin_summaries = self.market.get_highest_gain_coins(coin_number)
 
         if show_plots:
             _, axs = plt.subplots(coin_number)
 
         for coin in coin_summaries:
+            logger.info(f"Fetching latest 24hr dataset for {coin.instrument_name}.")
+
             time_series_data = self.market.get_valuation(
                 coin.instrument_name, "mark_price"
             )

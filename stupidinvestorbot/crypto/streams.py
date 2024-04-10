@@ -3,15 +3,14 @@ from crypto_com import MarketClient
 import asyncio
 import logging
 
-from stupidinvestorbot.crypto.clients import CryptoHttpClient
+from stupidinvestorbot.crypto.clients.http.crypto import CryptoHttpClient
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("client")
 
 
 # ! Buggy as fuck
-async def run(http_client: CryptoHttpClient):
-    balance = http_client.user.get_balance()[0][
+async def run(crypto: CryptoHttpClient):
+    balance = crypto.user.get_balance()[0][
         "position_balances"
     ]  # ! zero index refers to master wallet
 
@@ -19,7 +18,7 @@ async def run(http_client: CryptoHttpClient):
 
     print(balance)
 
-    instruments = http_client.market.get_instruments()
+    instruments = crypto.market.get_instruments()
 
     coin_props = list(filter(lambda x: x.symbol == "ENA_USD", instruments))[0]
 
@@ -41,7 +40,7 @@ async def run(http_client: CryptoHttpClient):
 
                         print(coin_props.qty_tick_size)
 
-                        http_client.user.create_order(
+                        crypto.user.create_order(
                             "ENA_USD",
                             float(coin_props.qty_tick_size) * latest_trade,
                             latest_trade,

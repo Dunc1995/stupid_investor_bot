@@ -12,33 +12,33 @@ class UserHttpClient(AuthenticatedHttpClient):
         api_url="https://api.crypto.com/exchange/v1/private/",
     ):
         super().__init__(
-            api_key=api_key, api_secret_key=api_secret_key, api_url=api_url
+            id_incr=1, api_key=api_key, api_secret_key=api_secret_key, api_url=api_url
         )
 
     def get_balance(self) -> Dict:
-        return self.post_request(1, "user-balance")[
+        return self.post_request("user-balance")[
             0
         ]  # ! zero index assumes only one wallet - may break
 
-    # ! TODO Streamline this
     def create_order(
         self,
         instrument_name: str,
-        investment_total_usd: float,
         instrument_price_usd: float,
-        quantity_tick: float,
+        quantity: str,
         side: str,
-    ):
-        global buy_order_id
-        print("Quantity increment is: " + quantity_tick)
+    ) -> Dict:
+        """Creates a buy or sell order for a specific coin. Quantity has to be a multiple of the coin's
+        quantity tick size.
 
-        # TODO this needs fixing/testing - not foolproof
-        quantity = quantities.get_coin_quantity(
-            instrument_price_usd, investment_total_usd, quantity_tick
-        )
+        Args:
+            instrument_name (str): Name of the crypto coin.
+            instrument_price_usd (float): Specific crypto coin price.
+            quantity (str): Number of coins to buy or sell.
+            side (str): BUY or SELL.
 
-        print(f"Total quantity is: {quantity}")
-        print(f"Estimate order price (USD): {quantity*instrument_price_usd}")
+        Returns:
+            Dict: response from the buy or sell order.
+        """
 
         params = {
             "instrument_name": instrument_name,
@@ -49,15 +49,11 @@ class UserHttpClient(AuthenticatedHttpClient):
             "time_in_force": "GOOD_TILL_CANCEL",
         }
 
-        print(json.dumps(params, indent=4))
-
-        result = self.post_request(buy_order_id, "create-order", params)
-
-        buy_order_id += 1
+        result = self.post_request("create-order", params)
 
         return result
 
     def get_open_orders(self, instrument_name=None):
         args = {} if instrument_name is None else {"instrument_name": instrument_name}
 
-        return self.post_request(4, "get-open-orders", args)
+        return self.post_request("get-open-orders", args)

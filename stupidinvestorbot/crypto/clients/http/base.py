@@ -7,13 +7,13 @@ import time
 from typing import Dict
 import requests
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("client")
 
 
 @dataclass
 class HttpClient:
     api_url: str
+    id_incr: int
 
     def get(self, method: str):
         response = requests.get(f"{self.api_url}{method}")
@@ -77,9 +77,9 @@ class AuthenticatedHttpClient(HttpClient):
             digestmod=hashlib.sha256,
         ).hexdigest()
 
-    def post_request(self, id: int, method: str, params={}) -> Dict:
+    def post_request(self, method: str, params={}) -> Dict:
         req = {
-            "id": id,
+            "id": self.id_incr,
             "method": "private/" + method,
             "api_key": self.api_key,
             "params": params,
@@ -96,5 +96,7 @@ class AuthenticatedHttpClient(HttpClient):
 
         if result.status_code != 200:
             raise ValueError(result.text)
+
+        self.id_incr += 1
 
         return json.loads(result.text)["result"]["data"]

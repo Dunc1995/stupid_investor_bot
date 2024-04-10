@@ -1,6 +1,9 @@
+import logging
 from typing import List
 from stupidinvestorbot.models.app import CoinSummary
 from stupidinvestorbot.crypto.clients.http.crypto import CryptoHttpClient
+
+logger = logging.getLogger("client")
 
 
 def select_coins(
@@ -20,19 +23,20 @@ def select_coins(
     """
     allocated_coins: List[CoinSummary] = []
 
-    sub_coins = [coin for coin in all_coins if coin.name.endswith("_USD")]
-
     coin_summaries_std = list(
-        filter(lambda summary: not summary.is_greater_than_std, sub_coins)
+        filter(lambda summary: not summary.is_greater_than_std, all_coins)
     )
+
+    logger.info(f"{len(coin_summaries_std)} coins are within standard deviation.")
 
     coin_summaries_mean = list(
         filter(
-            lambda summary: not summary.is_greater_than_mean
-            and not summary.is_greater_than_mean,
+            lambda summary: not summary.is_greater_than_mean,
             coin_summaries_std,
         )
     )
+
+    logger.info(f"{len(coin_summaries_std)} coins are below average market price.")
 
     if len(coin_summaries_std) >= number_of_coins:
         while len(allocated_coins) < number_of_coins:
@@ -48,7 +52,9 @@ def select_coins(
                 raise IndexError(
                     f"Can't find {number_of_coins} coins to invest in based on the current investment strategy."
                 )
-                break
+
+    logger.info(f"Number of coins to invest in: {number_of_coins}")
+    logger.info(f"Selected coins: {allocated_coins}")
 
     return allocated_coins
 
@@ -57,16 +63,9 @@ def run(crypto: CryptoHttpClient):
     all_coins = crypto.get_coin_summaries()
     total_investable, number_of_coins = crypto.get_number_of_coins_to_invest_in()
 
+    logger.info(f"Investable amount is: ${round(total_investable, 2)}")
+
     coin_selection = select_coins(number_of_coins, all_coins)
-
-    print(
-        f"""
-Investable amount is: ${round(total_investable, 2)}
-Number of coins to invest in: {number_of_coins}
-
-Selected coins: {coin_selection}
-"""
-    )
 
     # if len(allocated_coins) == increments:
     #     for coin in allocated_coins:

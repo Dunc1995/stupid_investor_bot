@@ -1,7 +1,10 @@
+import logging
 from typing import List
 from stupidinvestorbot.crypto.clients.http.base import HttpClient
 from stupidinvestorbot.models.app import Ticker
 from stupidinvestorbot.models.crypto import Instrument
+
+logger = logging.getLogger("client")
 
 
 class MarketHttpClient(HttpClient):
@@ -9,12 +12,16 @@ class MarketHttpClient(HttpClient):
         self,
         api_url="https://api.crypto.com/exchange/v1/public/",
     ):
-        super().__init__(api_url=api_url)
+        super().__init__(api_url=api_url, id_incr=1)
 
     def get_highest_gain_coins(self, number_of_coins: int) -> list[Ticker]:
+        logger.info(
+            f"Fetching {number_of_coins} coins that have gained the highest % in the last 24 hours."
+        )
+
         ticker_data = self.get_data("get-tickers")
 
-        data = [Ticker(obj) for obj in ticker_data]
+        data = [Ticker(obj) for obj in ticker_data if str(obj["i"]).endswith("_USD")]
 
         result = sorted(data, key=lambda x: tuple(x.percentage_change_24h))[
             -number_of_coins:
