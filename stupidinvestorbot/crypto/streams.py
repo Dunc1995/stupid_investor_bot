@@ -3,14 +3,14 @@ from crypto_com import MarketClient
 import asyncio
 import logging
 
-from stupidinvestorbot.crypto.clients import HttpClient
+from stupidinvestorbot.crypto.clients import CryptoHttpClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("client")
 
 
 # ! Buggy as fuck
-async def run(http_client: HttpClient):
+async def run(http_client: CryptoHttpClient):
     balance = http_client.user.get_balance()[0][
         "position_balances"
     ]  # ! zero index refers to master wallet
