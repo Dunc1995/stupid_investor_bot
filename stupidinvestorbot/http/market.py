@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from stupidinvestorbot.crypto.clients.http.base import HttpClient
+from stupidinvestorbot.http.base import HttpClient
 from stupidinvestorbot.models.app import Ticker
 from stupidinvestorbot.models.crypto import Instrument
 

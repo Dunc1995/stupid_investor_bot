@@ -1,7 +1,7 @@
 import json
 from typing import Dict
-from stupidinvestorbot import quantities
-from stupidinvestorbot.crypto.clients.http.base import AuthenticatedHttpClient
+from stupidinvestorbot import utils
+from stupidinvestorbot.http.base import AuthenticatedHttpClient
 
 
 class UserHttpClient(AuthenticatedHttpClient):

@@ -7,10 +7,11 @@ import matplotlib.dates as mdates
 import pandas as pd
 from pandas import DataFrame
 
-from stupidinvestorbot.crypto.clients.http.market import MarketHttpClient
-from stupidinvestorbot.crypto.clients.http.user import UserHttpClient
+import stupidinvestorbot.utils as utils
+from stupidinvestorbot.http.market import MarketHttpClient
+from stupidinvestorbot.http.user import UserHttpClient
 from stupidinvestorbot.models.app import CoinSummary, Ticker
-from stupidinvestorbot.models.crypto import PositionBalance, UserBalance
+from stupidinvestorbot.models.crypto import Order, PositionBalance, UserBalance
 
 INVESTMENT_INCREMENTS = 20.0
 
@@ -100,3 +101,21 @@ class CryptoHttpClient:
             plt.show()
 
         return output
+
+    def buy_order(
+        self,
+        instrument_name: str,
+        total_price_usd: float,
+        latest_trade_price_usd: float,
+        tick: float,
+    ):
+
+        quantity = utils.get_coin_quantity(
+            latest_trade_price_usd, total_price_usd, tick
+        )
+
+        result = self.user.create_order(
+            instrument_name, latest_trade_price_usd, quantity, "BUY"
+        )
+
+        Order()  # TODO Return to here

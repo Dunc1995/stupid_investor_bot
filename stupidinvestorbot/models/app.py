@@ -1,8 +1,12 @@
 from dataclasses import dataclass
 
+from stupidinvestorbot.models.crypto import Order
+
 
 @dataclass
 class Ticker:
+    """Maps abbreviated property names from public/get-tickers query to human readable properties."""
+
     instrument_name: str
     highest_trade_24h: str
     lowest_trade_24h: str
@@ -31,6 +35,10 @@ class Ticker:
 
 @dataclass
 class CoinSummary:
+    """Data container for storing basic statistical properties after
+    analyzing valuation data for a particular coin.
+    """
+
     name: str
     latest_trade: float
     mean_24h: float
@@ -38,3 +46,14 @@ class CoinSummary:
     percentage_std_24h: float
     is_greater_than_mean: bool
     is_greater_than_std: bool
+
+
+@dataclass
+class OrderSummary(Order):
+    coin_name: str
+    per_coin_price: float
+    quantity: float
+
+    @property
+    def total_usd(self):
+        return float(self.quantity) * float(self.per_coin_price)

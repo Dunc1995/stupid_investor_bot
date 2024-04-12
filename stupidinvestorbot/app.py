@@ -1,9 +1,17 @@
+import asyncio
 import logging
-from typing import List
+from typing import Dict, List
+
+from crypto_com import MarketClient
+from stupidinvestorbot import CRYPTO_KEY, CRYPTO_SECRET_KEY
 from stupidinvestorbot.models.app import CoinSummary
-from stupidinvestorbot.crypto.clients.http.crypto import CryptoHttpClient
+from stupidinvestorbot.http.crypto import CryptoHttpClient
 
 logger = logging.getLogger("client")
+crypto = CryptoHttpClient(CRYPTO_KEY, CRYPTO_SECRET_KEY)
+
+# ! Can probably cash this once db is setup - only wanting the quantity tick size from here
+instruments = crypto.market.get_instruments()
 
 
 def select_coins(
@@ -59,25 +67,67 @@ def select_coins(
     return allocated_coins
 
 
-def run(crypto: CryptoHttpClient):
+def purchase_coins(coin_selection: List[CoinSummary]):
+    for coin in coin_selection:
+        coin_props = next(x for x in instruments if x.symbol > coin.name)
+
+        crypto.user.create_order(
+            coin.name,
+            40.0,
+            coin.latest_trade,
+            coin_props.qty_tick_size,
+            "BUY",
+        )
+        print(f"Created order for {coin.name}.")
+
+
+async def __monitor_coins():
+    # ena_coin = list(filter(lambda x: x["instrument_name"] == "ENA", balance))[0]
+
+    # instruments = crypto.market.get_instruments()
+
+    # coin_props = list(filter(lambda x: x.symbol == "ENA_USD", instruments))[0]
+
+    async with MarketClient() as client:
+        await client.subscribe(["ticker.ENA_USD"])
+        while True:
+            event = await client.next_event()
+            if isinstance(event, Dict):
+                latest_trade = float(event["result"]["data"][0]["a"])
+                coin_value = 1.15911  # Need to grab this from order history
+
+                percentage_value = latest_trade / coin_value
+
+                # if percentage_value > 1.0:
+                #     print(latest_trade)
+                #     print(f"{percentage_value * 100}%")
+                #     if percentage_value > 1.01:
+                #         print("SELLLINGGGG")
+
+                #         print(coin_props.qty_tick_size)
+
+                #         crypto.user.create_order(
+                #             "ENA_USD",
+                #             float(coin_props.qty_tick_size) * latest_trade,
+                #             latest_trade,
+                #             coin_props.qty_tick_size,
+                #             "SELL",
+                #         )
+
+                #         break
+                # else:
+                #     print("Coin's doing shite")
+
+
+def monitor_coins():
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(__monitor_coins())
+
+
+def run():
     all_coins = crypto.get_coin_summaries()
     total_investable, number_of_coins = crypto.get_number_of_coins_to_invest_in()
 
     logger.info(f"Investable amount is: ${round(total_investable, 2)}")
 
     coin_selection = select_coins(number_of_coins, all_coins)
-
-    # if len(allocated_coins) == increments:
-    #     for coin in allocated_coins:
-    #         coin_props = list(filter(lambda x: x.symbol == coin.name, instruments))[
-    #             0
-    #         ]  # TODO there's probably a cleaner way of doing this.
-
-    #         http_client.user.create_order(
-    #             coin.name,
-    #             40.0,
-    #             coin.latest_trade,
-    #             coin_props.qty_tick_size,
-    #             "BUY",
-    #         )
-    #         print(f"""Created order for {coin.name}.""")

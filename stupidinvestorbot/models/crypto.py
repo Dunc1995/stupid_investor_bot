@@ -42,6 +42,10 @@ class UserBalance:
 
 @dataclass
 class Instrument:
+    """Expected parameters when calling public/get-instruments.
+    At the moment I only really want qty_tick_size from these objects.
+    Price tick size is probably also important."""
+
     symbol: str
     inst_type: str
     display_name: str
@@ -59,3 +63,11 @@ class Instrument:
     margin_sell_enabled: bool
     contract_size: str = None
     underlying_symbol: str = None
+
+
+@dataclass
+class Order:
+    """Basic parameters that are returned when calling private/create-order"""
+
+    order_id: int
+    client_oid: str
