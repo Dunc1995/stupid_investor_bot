@@ -81,7 +81,12 @@ def purchase_coins(coin_selection: List[CoinSummary]):
         )
 
 
-async def __monitor_coins(orders: List[OrderSummary]):
+def get_coin_ticker_data(event: Dict):
+    for coin in event["result"]["data"]:
+        yield {"name": coin["i"], "price": coin["a"]}
+
+
+async def monitor_coins_loop(orders: List[OrderSummary]):
     ticker_names = [f"ticker.{order.coin_name}" for order in orders]
     # ena_coin = list(filter(lambda x: x["instrument_name"] == "ENA", balance))[0]
 
@@ -94,9 +99,8 @@ async def __monitor_coins(orders: List[OrderSummary]):
         while True:
             event = await client.next_event()
             if isinstance(event, Dict):
-                latest_trade = event["result"]["data"]
-
-                logger.info(latest_trade)
+                for coin in get_coin_ticker_data(event):
+                    print(coin)
                 # coin_value = 1.15911  # Need to grab this from order history
 
                 # percentage_value = latest_trade / coin_value
@@ -124,7 +128,7 @@ async def __monitor_coins(orders: List[OrderSummary]):
 
 def monitor_coins(orders: List[OrderSummary]):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(__monitor_coins(orders))
+    loop.run_until_complete(monitor_coins_loop(orders))
 
 
 def run():
