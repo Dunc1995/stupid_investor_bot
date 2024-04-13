@@ -3,8 +3,8 @@ import logging
 from typing import Dict, List
 
 from crypto_com import MarketClient
-from stupidinvestorbot import CRYPTO_KEY, CRYPTO_SECRET_KEY
-from stupidinvestorbot.models.app import CoinSummary
+from stupidinvestorbot import CRYPTO_KEY, CRYPTO_SECRET_KEY, INVESTMENT_INCREMENTS
+from stupidinvestorbot.models.app import CoinSummary, OrderSummary
 from stupidinvestorbot.http.crypto import CryptoHttpClient
 
 logger = logging.getLogger("client")
@@ -68,20 +68,21 @@ def select_coins(
 
 
 def purchase_coins(coin_selection: List[CoinSummary]):
+    # TODO this is slow - can probably change this to use the create order list endpoint.
+    # ! First coin in the selection is most likely to be successfully purchased.
     for coin in coin_selection:
-        coin_props = next(x for x in instruments if x.symbol > coin.name)
+        coin_props = next(x for x in instruments if x.symbol == coin.name)
 
-        crypto.user.create_order(
+        yield crypto.buy_order(
             coin.name,
-            40.0,
+            INVESTMENT_INCREMENTS,
             coin.latest_trade,
             coin_props.qty_tick_size,
-            "BUY",
         )
-        print(f"Created order for {coin.name}.")
 
 
-async def __monitor_coins():
+async def __monitor_coins(orders: List[OrderSummary]):
+    ticker_names = [f"ticker.{order.coin_name}" for order in orders]
     # ena_coin = list(filter(lambda x: x["instrument_name"] == "ENA", balance))[0]
 
     # instruments = crypto.market.get_instruments()
@@ -89,14 +90,16 @@ async def __monitor_coins():
     # coin_props = list(filter(lambda x: x.symbol == "ENA_USD", instruments))[0]
 
     async with MarketClient() as client:
-        await client.subscribe(["ticker.ENA_USD"])
+        await client.subscribe(ticker_names)
         while True:
             event = await client.next_event()
             if isinstance(event, Dict):
-                latest_trade = float(event["result"]["data"][0]["a"])
-                coin_value = 1.15911  # Need to grab this from order history
+                latest_trade = event["result"]["data"]
 
-                percentage_value = latest_trade / coin_value
+                logger.info(latest_trade)
+                # coin_value = 1.15911  # Need to grab this from order history
+
+                # percentage_value = latest_trade / coin_value
 
                 # if percentage_value > 1.0:
                 #     print(latest_trade)
@@ -119,9 +122,9 @@ async def __monitor_coins():
                 #     print("Coin's doing shite")
 
 
-def monitor_coins():
+def monitor_coins(orders: List[OrderSummary]):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(__monitor_coins())
+    loop.run_until_complete(__monitor_coins(orders))
 
 
 def run():
@@ -131,3 +134,9 @@ def run():
     logger.info(f"Investable amount is: ${round(total_investable, 2)}")
 
     coin_selection = select_coins(number_of_coins, all_coins)
+
+    order_summaries = list(purchase_coins(coin_selection))
+
+    logger.info(order_summaries)
+
+    monitor_coins(order_summaries)

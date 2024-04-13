@@ -9,12 +9,12 @@ import pandas as pd
 from pandas import DataFrame
 
 import stupidinvestorbot.utils as utils
+from stupidinvestorbot import INVESTMENT_INCREMENTS
 from stupidinvestorbot.http.market import MarketHttpClient
 from stupidinvestorbot.http.user import UserHttpClient
 from stupidinvestorbot.models.app import CoinSummary, OrderSummary, Ticker
 from stupidinvestorbot.models.crypto import Order, PositionBalance, UserBalance
 
-INVESTMENT_INCREMENTS = 20.0
 
 logger = logging.getLogger("client")
 

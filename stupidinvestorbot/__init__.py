@@ -4,3 +4,5 @@ import os
 
 CRYPTO_KEY = os.environ.get("CRYPTO_KEY")
 CRYPTO_SECRET_KEY = os.environ.get("CRYPTO_SECRET_KEY")
+
+INVESTMENT_INCREMENTS = 20.0
