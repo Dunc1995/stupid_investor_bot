@@ -2,6 +2,7 @@ import logging
 import math
 import datetime as dt
 from typing import List
+import uuid
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
@@ -10,7 +11,7 @@ from pandas import DataFrame
 import stupidinvestorbot.utils as utils
 from stupidinvestorbot.http.market import MarketHttpClient
 from stupidinvestorbot.http.user import UserHttpClient
-from stupidinvestorbot.models.app import CoinSummary, Ticker
+from stupidinvestorbot.models.app import CoinSummary, OrderSummary, Ticker
 from stupidinvestorbot.models.crypto import Order, PositionBalance, UserBalance
 
 INVESTMENT_INCREMENTS = 20.0
@@ -108,14 +109,48 @@ class CryptoHttpClient:
         total_price_usd: float,
         latest_trade_price_usd: float,
         tick: float,
-    ):
+        dry_run: bool = True,
+    ) -> OrderSummary:
+        """Purchase a coin with respect to a total investment amount (e.g I want to purchase 20 dollars worth of Bitcoin)
+
+        Args:
+            instrument_name (str): Name of the coin to purchase
+            total_price_usd (float): Total cost of the investment (e.g. $20)
+            latest_trade_price_usd (float): Price per coin (in USD)
+            tick (float): Minimum quantity increment of the coin.
+            dry_run (bool, optional): Defaults to True. Set to False to actually purchase coins.
+
+        Returns:
+            OrderSummary: _description_
+        """
+
+        order_summary = None
 
         quantity = utils.get_coin_quantity(
             latest_trade_price_usd, total_price_usd, tick
         )
 
-        result = self.user.create_order(
-            instrument_name, latest_trade_price_usd, quantity, "BUY"
-        )
+        if not dry_run:
+            response_data = self.user.create_order(
+                instrument_name, latest_trade_price_usd, quantity, "BUY"
+            )
 
-        Order()  # TODO Return to here
+            order = Order(**response_data)
+
+            order_summary = OrderSummary(
+                order.order_id,
+                order.client_oid,
+                instrument_name,
+                latest_trade_price_usd,
+                quantity,
+            )
+        else:
+            order_summary = OrderSummary(
+                -1,
+                str(uuid.uuid4()),
+                instrument_name,
+                latest_trade_price_usd,
+                quantity,
+            )
+
+        return order_summary
