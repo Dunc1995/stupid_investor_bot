@@ -86,7 +86,7 @@ class AuthenticatedHttpClient(HttpClient):
             "nonce": int(time.time() * 1000),
         }
 
-        logger.debug("I got here with: " + json.dumps(req, indent=4))
+        logger.info(json.dumps(req, indent=4))
 
         req["sig"] = self.__get_signature(req)
 
@@ -99,4 +99,9 @@ class AuthenticatedHttpClient(HttpClient):
 
         self.id_incr += 1
 
-        return json.loads(result.text)["result"]["data"]
+        logger.info(result.text)
+
+        data_dict = json.loads(result.text)["result"]
+
+        # * data doesn't always exist even though it exists in about 90% of API calls.
+        return data_dict["data"] if "data" in data_dict else data_dict

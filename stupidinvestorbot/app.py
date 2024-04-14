@@ -1,6 +1,7 @@
 import asyncio
+from decimal import Decimal
 import logging
-from typing import Dict, List
+from typing import Any, Dict, Generator, List
 
 from crypto_com import MarketClient
 from stupidinvestorbot import CRYPTO_KEY, CRYPTO_SECRET_KEY, INVESTMENT_INCREMENTS
@@ -67,7 +68,9 @@ def select_coins(
     return allocated_coins
 
 
-def purchase_coins(coin_selection: List[CoinSummary]):
+def purchase_coins(
+    coin_selection: List[CoinSummary],
+) -> Generator[OrderSummary, Any, None]:
     # TODO this is slow - can probably change this to use the create order list endpoint.
     # ! First coin in the selection is most likely to be successfully purchased.
     for coin in coin_selection:
@@ -78,7 +81,14 @@ def purchase_coins(coin_selection: List[CoinSummary]):
             INVESTMENT_INCREMENTS,
             coin.latest_trade,
             coin_props.qty_tick_size,
+            dry_run=False,
         )
+
+
+def sell_coin(order: OrderSummary):
+    crypto.user.create_order(
+        order.coin_name, order.per_coin_price, order.quantity, "SELL"
+    )
 
 
 def get_coin_ticker_data(event: Dict):
@@ -100,30 +110,21 @@ async def monitor_coins_loop(orders: List[OrderSummary]):
             event = await client.next_event()
             if isinstance(event, Dict):
                 for coin in get_coin_ticker_data(event):
-                    print(coin)
-                # coin_value = 1.15911  # Need to grab this from order history
 
-                # percentage_value = latest_trade / coin_value
+                    order = next(x for x in orders if x.coin_name == coin["name"])
 
-                # if percentage_value > 1.0:
-                #     print(latest_trade)
-                #     print(f"{percentage_value * 100}%")
-                #     if percentage_value > 1.01:
-                #         print("SELLLINGGGG")
+                    price = coin["price"]
 
-                #         print(coin_props.qty_tick_size)
+                    percentage_change = Decimal(price) / Decimal(order.per_coin_price)
 
-                #         crypto.user.create_order(
-                #             "ENA_USD",
-                #             float(coin_props.qty_tick_size) * latest_trade,
-                #             latest_trade,
-                #             coin_props.qty_tick_size,
-                #             "SELL",
-                #         )
+                    logger.info(
+                        f"{coin['name']}    Percentage Change: {round(percentage_change * 100, 2)}%"
+                    )
 
-                #         break
-                # else:
-                #     print("Coin's doing shite")
+                    if percentage_change > 1.01:
+                        order.per_coin_price = price
+                        sell_coin(order)
+                        logger.info(f"SELLING")
 
 
 def monitor_coins(orders: List[OrderSummary]):

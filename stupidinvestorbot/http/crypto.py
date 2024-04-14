@@ -106,9 +106,9 @@ class CryptoHttpClient:
     def buy_order(
         self,
         instrument_name: str,
-        total_price_usd: float,
-        latest_trade_price_usd: float,
-        tick: float,
+        total_price_usd: str,
+        latest_trade_price_usd: str,
+        tick: str,
         dry_run: bool = True,
     ) -> OrderSummary:
         """Purchase a coin with respect to a total investment amount (e.g I want to purchase 20 dollars worth of Bitcoin)

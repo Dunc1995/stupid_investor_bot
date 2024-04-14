@@ -1,3 +1,4 @@
+from decimal import Decimal
 import json
 from typing import Dict
 from stupidinvestorbot import utils
@@ -23,7 +24,7 @@ class UserHttpClient(AuthenticatedHttpClient):
     def create_order(
         self,
         instrument_name: str,
-        instrument_price_usd: float,
+        instrument_price_usd: str,
         quantity: str,
         side: str,
     ) -> Dict:
