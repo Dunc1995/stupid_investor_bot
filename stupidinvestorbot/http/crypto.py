@@ -67,16 +67,12 @@ class CryptoHttpClient:
 
         return total_investable, number_of_investments
 
-    def get_coin_summaries(self, show_plots=False) -> List[CoinSummary]:
+    def get_coin_summaries(self) -> List[CoinSummary]:
         output = []
-        axs = None
         coin_number = 30
         i = 0
 
         coin_summaries = self.market.get_highest_gain_coins(coin_number)
-
-        if show_plots:
-            _, axs = plt.subplots(coin_number)
 
         for coin in coin_summaries:
             logger.info(f"Fetching latest 24hr dataset for {coin.instrument_name}.")
@@ -89,17 +85,9 @@ class CryptoHttpClient:
             df["t"] = df["t"].apply(lambda x: dt.datetime.fromtimestamp(x / 1000))
             df["v"] = df["v"].astype(float)
 
-            if show_plots:
-                axs[i].plot(df["t"], df["v"])
-                axs[i].set_title(coin.instrument_name)
-                axs[i].xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
-
             output.append(CryptoHttpClient.__get_coin_summary(coin, df))
 
             i += 1
-
-        if show_plots:
-            plt.show()
 
         return output
 

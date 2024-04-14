@@ -133,8 +133,9 @@ def monitor_coins(orders: List[OrderSummary]):
 
 
 def run():
-    all_coins = crypto.get_coin_summaries()
     total_investable, number_of_coins = crypto.get_number_of_coins_to_invest_in()
+
+    all_coins = crypto.get_coin_summaries()
 
     logger.info(f"Investable amount is: ${round(total_investable, 2)}")
 
