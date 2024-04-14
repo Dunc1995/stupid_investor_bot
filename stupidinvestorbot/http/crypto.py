@@ -1,7 +1,7 @@
 import logging
 import math
 import datetime as dt
-from typing import List
+from typing import Any, Generator, List
 import uuid
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -32,14 +32,17 @@ class CryptoHttpClient:
         stats = valuation
         mean = stats["v"].mean()
         std = stats["v"].std()
+        modes = stats["v"].mode()
         percentage_std = float(std) / float(mean)
 
         return CoinSummary(
             name=coin.instrument_name,
             latest_trade=float(coin.latest_trade),
             mean_24h=mean,
+            modes_24h=modes,
             std_24h=std,
             percentage_std_24h=percentage_std,
+            percentage_change_24h=float(coin.percentage_change_24h),
             is_greater_than_mean=bool(float(coin.latest_trade) - mean > 0),
             is_greater_than_std=bool(float(coin.latest_trade) - (mean + std) > 0),
         )
@@ -67,14 +70,9 @@ class CryptoHttpClient:
 
         return total_investable, number_of_investments
 
-    def get_coin_summaries(self) -> List[CoinSummary]:
-        output = []
-        coin_number = 30
-        i = 0
+    def get_coin_summaries(self) -> Generator[CoinSummary, Any, None]:
 
-        coin_summaries = self.market.get_highest_gain_coins(coin_number)
-
-        for coin in coin_summaries:
+        for coin in self.market.get_usd_coins():
             logger.info(f"Fetching latest 24hr dataset for {coin.instrument_name}.")
 
             time_series_data = self.market.get_valuation(
@@ -85,11 +83,13 @@ class CryptoHttpClient:
             df["t"] = df["t"].apply(lambda x: dt.datetime.fromtimestamp(x / 1000))
             df["v"] = df["v"].astype(float)
 
-            output.append(CryptoHttpClient.__get_coin_summary(coin, df))
+            summary = CryptoHttpClient.__get_coin_summary(coin, df)
 
-            i += 1
-
-        return output
+            if summary.has_high_std and summary.has_low_change:
+                logger.info(f"Investing in the following coin: {summary}")
+                yield summary
+            else:
+                logger.info(f"Rejecting the following: {summary}")
 
     def buy_order(
         self,

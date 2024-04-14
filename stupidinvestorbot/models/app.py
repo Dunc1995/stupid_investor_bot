@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from pandas import Series
 from stupidinvestorbot.models.crypto import Order
 
 
@@ -42,11 +43,24 @@ class CoinSummary:
     name: str
     latest_trade: float
     mean_24h: float
-    modal_24h: float
+    modes_24h: Series
     std_24h: float
+    percentage_change_24h: float
     percentage_std_24h: float
     is_greater_than_mean: bool
     is_greater_than_std: bool
+
+    @property
+    def has_one_mode(self) -> bool:
+        return len(self.modes_24h)
+
+    @property
+    def has_high_std(self) -> bool:
+        return self.percentage_std_24h > 0.05
+
+    @property
+    def has_low_change(self) -> bool:
+        return self.percentage_change_24h < 0.01 and self.percentage_change_24h > -0.01
 
 
 @dataclass
