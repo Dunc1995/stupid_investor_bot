@@ -27,9 +27,14 @@ class CryptoHttpClient:
         self.market = MarketHttpClient()
         self.user = UserHttpClient(api_key, api_secret_key)
 
-    @staticmethod
-    def __get_coin_summary(coin: Ticker, valuation: DataFrame) -> CoinSummary:
-        stats = valuation
+    def get_coin_summary(self, coin: Ticker) -> CoinSummary:
+        time_series_data = self.market.get_valuation(coin.instrument_name, "mark_price")
+
+        df = pd.DataFrame.from_dict(time_series_data)
+        df["t"] = df["t"].apply(lambda x: dt.datetime.fromtimestamp(x / 1000))
+        df["v"] = df["v"].astype(float)
+
+        stats = df
         mean = stats["v"].mean()
         std = stats["v"].std()
         modes = stats["v"].mode()
@@ -75,15 +80,7 @@ class CryptoHttpClient:
         for coin in self.market.get_usd_coins():
             logger.info(f"Fetching latest 24hr dataset for {coin.instrument_name}.")
 
-            time_series_data = self.market.get_valuation(
-                coin.instrument_name, "mark_price"
-            )
-
-            df = pd.DataFrame.from_dict(time_series_data)
-            df["t"] = df["t"].apply(lambda x: dt.datetime.fromtimestamp(x / 1000))
-            df["v"] = df["v"].astype(float)
-
-            summary = CryptoHttpClient.__get_coin_summary(coin, df)
+            summary = self.get_coin_summary(coin)
 
             if summary.has_high_std and summary.has_low_change:
                 logger.info(f"Investing in the following coin: {summary}")

@@ -17,7 +17,13 @@ class MarketHttpClient(HttpClient):
     def get_usd_coins(self) -> list[Ticker]:
         ticker_data = self.get_data("get-tickers")
 
-        data = [Ticker(obj) for obj in ticker_data if str(obj["i"]).endswith("_USD")]
+        data = [
+            Ticker(obj)
+            for obj in ticker_data
+            if str(obj["i"]).endswith("_USD")
+            and float(obj["c"]) < 0.01
+            and float(obj["c"]) > -0.05
+        ]
 
         return data
 

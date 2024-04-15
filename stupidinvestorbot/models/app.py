@@ -56,11 +56,11 @@ class CoinSummary:
 
     @property
     def has_high_std(self) -> bool:
-        return self.percentage_std_24h > 0.05
+        return self.percentage_std_24h > 0.03
 
     @property
     def has_low_change(self) -> bool:
-        return self.percentage_change_24h < 0.01 and self.percentage_change_24h > -0.01
+        return self.percentage_change_24h < 0.01 and self.percentage_change_24h > -0.02
 
 
 @dataclass
@@ -72,3 +72,10 @@ class OrderSummary(Order):
     @property
     def total_usd(self):
         return float(self.quantity) * float(self.per_coin_price)
+
+
+@dataclass
+class TradingStatus:
+    order: OrderSummary
+    order_created: bool
+    order_fulfilled: bool
