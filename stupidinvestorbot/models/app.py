@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import time
 
 from pandas import Series
 from stupidinvestorbot.models.crypto import Order
@@ -51,15 +52,33 @@ class CoinSummary:
     is_greater_than_std: bool
 
     @property
-    def has_one_mode(self) -> bool:
-        return len(self.modes_24h)
+    def has_few_modes(self) -> bool:
+        """Potentially useful if a low number of modes signifies a fairly stable coin resembling
+        "white noise" variability.
+
+        Returns:
+            bool: True if low number of modes for the given dataset.
+        """
+        return len(self.modes_24h) < 5
 
     @property
     def has_high_std(self) -> bool:
+        """Useful to work out which coins are the most volatile at any point in time.
+
+        Returns:
+            bool: True if standard deviation is higher than the given threshold.
+        """
         return self.percentage_std_24h > 0.03
 
     @property
     def has_low_change(self) -> bool:
+        """I'm assuming it's a safe assumption that a volatile coin at its mean or lower than average
+        will hopefully have a rebound back to a value above its mean. Use this property to invest at the
+        average price or lower.
+
+        Returns:
+            bool: True if percentage change is close to zero.
+        """
         return self.percentage_change_24h < 0.01 and self.percentage_change_24h > -0.02
 
 
@@ -79,3 +98,15 @@ class TradingStatus:
     order: OrderSummary
     order_created: bool
     order_fulfilled: bool
+    __timestamp: int = None
+
+    @property
+    def timestamp(self) -> int:
+        if self.__timestamp is None:
+            self.__timestamp = int(time.time())
+
+        return self.__timestamp
+
+    @timestamp.setter
+    def timestamp(self, stamp: int):
+        stamp = self.__timestamp

@@ -75,7 +75,8 @@ class CryptoHttpClient:
 
         return total_investable, number_of_investments
 
-    def get_coin_summaries(self) -> Generator[CoinSummary, Any, None]:
+    def select_coin(self) -> CoinSummary:
+        coin_summary = None
 
         for coin in self.market.get_usd_coins():
             logger.info(f"Fetching latest 24hr dataset for {coin.instrument_name}.")
@@ -83,10 +84,13 @@ class CryptoHttpClient:
             summary = self.get_coin_summary(coin)
 
             if summary.has_high_std and summary.has_low_change:
-                logger.info(f"Investing in the following coin: {summary}")
-                yield summary
+                logger.info(f"Selecting the following coin: {summary}")
+                coin_summary = summary
+                break
             else:
                 logger.info(f"Rejecting the following: {summary}")
+
+        return coin_summary
 
     def buy_order(
         self,

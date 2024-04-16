@@ -40,17 +40,16 @@ def get_coin_ticker_data(event: Dict):
 
 
 async def monitor_coins_loop(order: OrderSummary):
-    # ena_coin = list(filter(lambda x: x["instrument_name"] == "ENA", balance))[0]
-
-    # instruments = crypto.market.get_instruments()
-
-    # coin_props = list(filter(lambda x: x.symbol == "ENA_USD", instruments))[0]
-
     async with MarketClient() as client:
+        _coin_name = order.coin_name.replace("_", "-")
+
         await client.subscribe(
-            [f"ticker.{order.coin_name}", f"user.order.{order.coin_name}"]
+            [f"ticker.{order.coin_name}", f"user.order.{_coin_name}"]
         )
-        while True:
+
+        is_waiting = True
+
+        while is_waiting:
             event = await client.next_event()
 
             if isinstance(event, Dict) and "result" in event:
@@ -63,10 +62,13 @@ async def monitor_coins_loop(order: OrderSummary):
                         f"{coin['name']}    Percentage Change: {round(percentage_change * 100, 2)}%"
                     )
 
-                    if percentage_change > 1.01:
+                    if percentage_change > 1.005:
                         order.per_coin_price = price
                         sell_coin(order)
-                        logger.info(f"SELLING")
+                        logger.info(
+                            f"Sell order created with the following properties: {order}"
+                        )
+                        is_waiting = False
             else:
                 logger.info(event)
 
@@ -87,9 +89,8 @@ def run():
         order_summary = _coin.order
 
     if order_summary is None:
-        for _coin in crypto.get_coin_summaries():
-            coin = _coin
-            instrument = next(x for x in instruments if x.symbol == _coin.name)
+        coin = crypto.select_coin()
+        instrument = next(x for x in instruments if x.symbol == coin.name)
 
         coin_data = crypto.market.get_ticker(coin.name)
 

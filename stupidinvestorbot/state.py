@@ -5,6 +5,7 @@ import time
 from typing import Any, Generator, List
 
 from stupidinvestorbot.models.app import OrderSummary, TradingStatus
+from stupidinvestorbot.utils import non_essential
 
 # TODO use abspath
 TRADES_PATH = "./trades"
@@ -22,7 +23,7 @@ def log_trading_status(status: TradingStatus):
 
     with open(
         os.path.join(
-            TRADES_PATH, f"{status.order.coin_name.lower()}_{int(time.time())}.json"
+            TRADES_PATH, f"{status.order.coin_name.lower()}_{status.timestamp}.json"
         ),
         "w+",
     ) as f:
