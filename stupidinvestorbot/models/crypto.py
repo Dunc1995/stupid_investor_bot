@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from decimal import Decimal
+from typing import List
 
 
 @dataclass
@@ -71,3 +73,39 @@ class Order:
 
     order_id: int
     client_oid: str
+
+
+@dataclass
+class OrderDetail:
+    account_id: str
+    order_id: int
+    client_oid: int
+    order_type: str
+    time_in_force: str
+    side: str
+    exec_inst: List
+    quantity: int
+    limit_price: str
+    order_value: str
+    maker_fee_rate: str
+    taker_fee_rate: str
+    avg_price: str
+    cumulative_quantity: str
+    cumulative_value: str
+    cumulative_fee: str
+    status: str
+    update_user_id: str
+    order_date: str
+    instrument_name: str
+    fee_instrument_name: str
+    create_time: int
+    create_time_ns: int
+    update_time: int
+
+    @property
+    def successful(self) -> bool:
+        """
+        Returns:
+            bool: Returns True if the order has been fulfilled completely.
+        """
+        return self.status == "FILLED"

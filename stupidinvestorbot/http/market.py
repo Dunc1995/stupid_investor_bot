@@ -25,7 +25,9 @@ class MarketHttpClient(HttpClient):
             and float(obj["c"]) > -0.05
         ]
 
-        return data
+        result = sorted(data, key=lambda x: tuple(x.percentage_change_24h))
+
+        return result
 
     def get_instruments(self) -> List[Instrument]:
         instrument_data = self.get_data("get-instruments")

@@ -120,11 +120,9 @@ class CryptoHttpClient:
         )
 
         if not dry_run:
-            response_data = self.user.create_order(
+            order = self.user.create_order(
                 instrument_name, latest_trade_price_usd, quantity, "BUY"
             )
-
-            order = Order(**response_data)
 
             order_summary = OrderSummary(
                 order.order_id,

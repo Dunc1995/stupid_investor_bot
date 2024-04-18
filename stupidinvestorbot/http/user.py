@@ -1,8 +1,9 @@
 from decimal import Decimal
 import json
-from typing import Dict
+from typing import Any, Dict, Generator, List
 from stupidinvestorbot import utils
 from stupidinvestorbot.http.base import AuthenticatedHttpClient
+from stupidinvestorbot.models.crypto import Order, OrderDetail
 
 
 class UserHttpClient(AuthenticatedHttpClient):
@@ -27,7 +28,7 @@ class UserHttpClient(AuthenticatedHttpClient):
         instrument_price_usd: str,
         quantity: str,
         side: str,
-    ) -> Dict:
+    ) -> Order:
         """Creates a buy or sell order for a specific coin. Quantity has to be a multiple of the coin's
         quantity tick size.
 
@@ -52,9 +53,9 @@ class UserHttpClient(AuthenticatedHttpClient):
 
         result = self.post_request("create-order", params)
 
-        return result
+        return Order(**result)
 
-    def get_open_orders(self, instrument_name=None):
-        args = {} if instrument_name is None else {"instrument_name": instrument_name}
-
-        return self.post_request("get-open-orders", args)
+    def get_order_detail(self, order_id: int) -> OrderDetail:
+        return OrderDetail(
+            **self.post_request("get-order-detail", {"order_id": str(order_id)})
+        )

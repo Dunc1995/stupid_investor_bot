@@ -68,7 +68,7 @@ class CoinSummary:
         Returns:
             bool: True if standard deviation is higher than the given threshold.
         """
-        return self.percentage_std_24h > 0.03
+        return self.percentage_std_24h > 0.04
 
     @property
     def has_low_change(self) -> bool:
@@ -79,7 +79,7 @@ class CoinSummary:
         Returns:
             bool: True if percentage change is close to zero.
         """
-        return self.percentage_change_24h < 0.01 and self.percentage_change_24h > -0.02
+        return self.percentage_change_24h < 0.03 and self.percentage_change_24h > -0.03
 
 
 @dataclass
@@ -96,8 +96,10 @@ class OrderSummary(Order):
 @dataclass
 class TradingStatus:
     order: OrderSummary
-    order_created: bool
-    order_fulfilled: bool
+    buy_order_created: bool
+    buy_order_fulfilled: bool
+    sell_order_created: bool
+    sell_order_fulfilled: bool
     __timestamp: int = None
 
     @property
@@ -106,7 +108,3 @@ class TradingStatus:
             self.__timestamp = int(time.time())
 
         return self.__timestamp
-
-    @timestamp.setter
-    def timestamp(self, stamp: int):
-        stamp = self.__timestamp

@@ -48,5 +48,5 @@ def read_existing_trading_statuses() -> Generator[TradingStatus, Any, None]:
 
             status = TradingStatus(**status_dict)
 
-        if not status.order_fulfilled:
+        if not status.buy_order_fulfilled:
             yield status

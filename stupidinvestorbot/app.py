@@ -1,9 +1,10 @@
 import asyncio
 from decimal import Decimal
 import logging
-from typing import Any, Dict, Generator, List
+import time
+from typing import Dict
 
-from crypto_com import MarketClient
+from crypto_com import MarketClient, UserClient
 from stupidinvestorbot import CRYPTO_KEY, CRYPTO_SECRET_KEY, INVESTMENT_INCREMENTS
 from stupidinvestorbot.models.app import CoinSummary, OrderSummary, TradingStatus
 from stupidinvestorbot.http.crypto import CryptoHttpClient
@@ -17,9 +18,28 @@ crypto = CryptoHttpClient(CRYPTO_KEY, CRYPTO_SECRET_KEY)
 instruments = crypto.market.get_instruments()
 
 
+def monitor_trade(order_id: str):
+    logger.info("Order successfully created.")
+
+    order_is_pending = True
+
+    while order_is_pending:
+        order_detail = crypto.user.get_order_detail(order_id)
+
+        log_message = "is currently pending."
+
+        if order_detail.successful:
+            order_is_pending = False
+            log_message = "has been successful."
+
+        logger.info(f"Order {order_id} {log_message}")
+
+        time.sleep(1)
+
+
 def purchase_coin(coin: CoinSummary, coin_props: Instrument) -> OrderSummary:
 
-    return crypto.buy_order(
+    order_summary = crypto.buy_order(
         coin.name,
         INVESTMENT_INCREMENTS,
         coin.latest_trade,
@@ -27,11 +47,20 @@ def purchase_coin(coin: CoinSummary, coin_props: Instrument) -> OrderSummary:
         dry_run=False,
     )
 
+    monitor_trade(order_summary.order_id)
 
-def sell_coin(order: OrderSummary):
+    return order_summary
+
+
+def sell_coin(order_summary: OrderSummary):
     crypto.user.create_order(
-        order.coin_name, order.per_coin_price, order.quantity, "SELL"
+        order_summary.coin_name,
+        order_summary.per_coin_price,
+        order_summary.quantity,
+        "SELL",
     )
+
+    monitor_trade(order_summary.order_id)
 
 
 def get_coin_ticker_data(event: Dict):
@@ -41,11 +70,7 @@ def get_coin_ticker_data(event: Dict):
 
 async def monitor_coins_loop(order: OrderSummary):
     async with MarketClient() as client:
-        _coin_name = order.coin_name.replace("_", "-")
-
-        await client.subscribe(
-            [f"ticker.{order.coin_name}", f"user.order.{_coin_name}"]
-        )
+        await client.subscribe([f"ticker.{order.coin_name}"])
 
         is_waiting = True
 
@@ -62,11 +87,14 @@ async def monitor_coins_loop(order: OrderSummary):
                         f"{coin['name']}    Percentage Change: {round(percentage_change * 100, 2)}%"
                     )
 
-                    if percentage_change > 1.005:
+                    if percentage_change > 1.01:
                         order.per_coin_price = price
                         sell_coin(order)
                         logger.info(
                             f"Sell order created with the following properties: {order}"
+                        )
+                        state.log_trading_status(
+                            TradingStatus(order, True, True, True, True)
                         )
                         is_waiting = False
             else:
@@ -107,7 +135,9 @@ def run():
 
             order_summary = purchase_coin(coin, instrument)
 
-            state.log_trading_status(TradingStatus(order_summary, True, False))
+            state.log_trading_status(
+                TradingStatus(order_summary, True, False, False, False)
+            )
 
             logger.info(order_summary)
 
