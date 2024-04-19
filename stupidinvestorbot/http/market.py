@@ -26,6 +26,7 @@ class MarketHttpClient(HttpClient):
         ]
 
         result = sorted(data, key=lambda x: tuple(x.percentage_change_24h))
+        result.reverse()
 
         return result
 

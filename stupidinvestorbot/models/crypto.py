@@ -87,8 +87,6 @@ class OrderDetail:
     quantity: int
     limit_price: str
     order_value: str
-    maker_fee_rate: str
-    taker_fee_rate: str
     avg_price: str
     cumulative_quantity: str
     cumulative_value: str
@@ -101,6 +99,10 @@ class OrderDetail:
     create_time: int
     create_time_ns: int
     update_time: int
+    ref_price: str
+    maker_fee_rate: str = None
+    taker_fee_rate: str = None
+    ref_price_type: str = None
 
     @property
     def successful(self) -> bool:

@@ -8,6 +8,7 @@ import matplotlib.dates as mdates
 import pandas as pd
 from pandas import DataFrame
 
+from stupidinvestorbot.strategies import CoinSelection
 import stupidinvestorbot.utils as utils
 from stupidinvestorbot import INVESTMENT_INCREMENTS
 from stupidinvestorbot.http.market import MarketHttpClient
@@ -75,7 +76,7 @@ class CryptoHttpClient:
 
         return total_investable, number_of_investments
 
-    def select_coin(self) -> CoinSummary:
+    def select_coin(self, strategy) -> CoinSummary:
         coin_summary = None
 
         for coin in self.market.get_usd_coins():
@@ -83,7 +84,7 @@ class CryptoHttpClient:
 
             summary = self.get_coin_summary(coin)
 
-            if summary.has_high_std and summary.has_low_change:
+            if CoinSelection.should_select_coin(summary, strategy):
                 logger.info(f"Selecting the following coin: {summary}")
                 coin_summary = summary
                 break

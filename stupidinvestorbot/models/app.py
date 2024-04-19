@@ -87,6 +87,7 @@ class OrderSummary(Order):
     coin_name: str
     per_coin_price: float
     quantity: float
+    succeeded: bool = False
 
     @property
     def total_usd(self):

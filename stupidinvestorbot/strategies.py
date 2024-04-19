@@ -32,16 +32,21 @@ class CoinSelection:
         """
         mean = float(summary.mean_24h)
         std = float(summary.std_24h)
-        return not bool(float(summary.latest_trade) - (mean + std) > 0)
+        return (
+            bool(float(summary.latest_trade) - (mean + std) <= 0)
+            and summary.percentage_std_24h > 0.02
+        )
 
     @staticmethod
     def should_select_coin(summary: CoinSummary, strategy: str):
         select_coin = False
 
         match strategy:
-            case STRATEGY_HIGH_GAIN:
-                select_coin = CoinSelection.high_gain()
-            case STRATEGY_CONSERVATIVE:
-                select_coin = CoinSelection.conservative()
+            case "high_gain":
+                select_coin = CoinSelection.high_gain(summary)
+            case "conservative":
+                select_coin = CoinSelection.conservative(summary)
             case _:
-                print("exception 2")
+                select_coin = False
+
+        return select_coin

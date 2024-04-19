@@ -59,3 +59,6 @@ class UserHttpClient(AuthenticatedHttpClient):
         return OrderDetail(
             **self.post_request("get-order-detail", {"order_id": str(order_id)})
         )
+
+    def cancel_order(self, order_id: int):
+        return self.post_request("cancel-order", {"order_id": str(order_id)})

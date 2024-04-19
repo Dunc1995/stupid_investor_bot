@@ -4,7 +4,7 @@ import logging
 import time
 from typing import Dict
 
-from crypto_com import MarketClient, UserClient
+from crypto_com import MarketClient
 from stupidinvestorbot import CRYPTO_KEY, CRYPTO_SECRET_KEY, INVESTMENT_INCREMENTS
 from stupidinvestorbot.models.app import CoinSummary, OrderSummary, TradingStatus
 from stupidinvestorbot.http.crypto import CryptoHttpClient
@@ -14,27 +14,35 @@ import stupidinvestorbot.state as state
 logger = logging.getLogger("client")
 crypto = CryptoHttpClient(CRYPTO_KEY, CRYPTO_SECRET_KEY)
 
-# ! Can probably cash this once db is setup - only wanting the quantity tick size from here
+# ! Can probably cache this once db is setup - only wanting the quantity tick size from here
 instruments = crypto.market.get_instruments()
 
 
-def monitor_trade(order_id: str):
+def has_order_succeeded(order_id: str) -> bool:
     logger.info("Order successfully created.")
 
-    order_is_pending = True
+    tries = 0
+    is_order_successful = False
 
-    while order_is_pending:
+    while not is_order_successful and tries <= 60:
         order_detail = crypto.user.get_order_detail(order_id)
 
         log_message = "is currently pending."
 
         if order_detail.successful:
-            order_is_pending = False
+            is_order_successful = True
             log_message = "has been successful."
 
         logger.info(f"Order {order_id} {log_message}")
 
-        time.sleep(1)
+        time.sleep(2)
+        tries += 1
+
+    if not is_order_successful:
+        crypto.user.cancel_order(order_id)
+        logger.info(f"Order {order_id} was cancelled.")
+
+    return is_order_successful
 
 
 def purchase_coin(coin: CoinSummary, coin_props: Instrument) -> OrderSummary:
@@ -47,7 +55,9 @@ def purchase_coin(coin: CoinSummary, coin_props: Instrument) -> OrderSummary:
         dry_run=False,
     )
 
-    monitor_trade(order_summary.order_id)
+    order_succeeded = has_order_succeeded(order_summary.order_id)
+
+    order_summary.succeeded = order_succeeded
 
     return order_summary
 
@@ -60,7 +70,7 @@ def sell_coin(order_summary: OrderSummary):
         "SELL",
     )
 
-    monitor_trade(order_summary.order_id)
+    has_order_succeeded(order_summary.order_id)
 
 
 def get_coin_ticker_data(event: Dict):
@@ -106,18 +116,18 @@ def monitor_coin(order: OrderSummary):
     loop.run_until_complete(monitor_coins_loop(order))
 
 
-def run():
+def run(strategy: str = "high_gain"):
     coin: CoinSummary = None
     instrument: Instrument = None
     order_summary = None
     total_investable, number_of_coins = crypto.get_number_of_coins_to_invest_in()
     logger.info(f"Investable amount is: ${round(total_investable, 2)}")
 
-    for _coin in state.read_existing_trading_statuses():
-        order_summary = _coin.order
+    # for _coin in state.read_existing_trading_statuses():
+    #     order_summary = _coin.order
 
     if order_summary is None:
-        coin = crypto.select_coin()
+        coin = crypto.select_coin(strategy)
         instrument = next(x for x in instruments if x.symbol == coin.name)
 
         coin_data = crypto.market.get_ticker(coin.name)
@@ -135,13 +145,16 @@ def run():
 
             order_summary = purchase_coin(coin, instrument)
 
-            state.log_trading_status(
-                TradingStatus(order_summary, True, False, False, False)
-            )
+            # state.log_trading_status(
+            #     TradingStatus(order_summary, True, False, False, False)
+            # )
 
-            logger.info(order_summary)
+            if order_summary.succeeded:
+                logger.info(order_summary)
 
-            monitor_coin(order_summary)
+                monitor_coin(order_summary)
+            else:
+                logger.info(f"Skipping purchase of {order_summary.coin_name}")
     else:
         logger.info(f"Resuming trading session with {order_summary.coin_name}")
         monitor_coin(order_summary)
