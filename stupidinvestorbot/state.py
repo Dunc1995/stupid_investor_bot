@@ -5,7 +5,6 @@ import time
 from typing import Any, Generator, List
 
 from stupidinvestorbot.models.app import OrderSummary, TradingStatus
-from stupidinvestorbot.utils import non_essential
 
 # TODO use abspath
 TRADES_PATH = "./trades"

@@ -17,7 +17,9 @@ class CoinSelection:
         Returns:
             bool: True if the coin is volatile but with 0% change in the most recent trade.
         """
-        return summary.has_high_std and summary.has_low_change
+        return (
+            summary.has_high_std and summary.has_low_change and summary.is_large_volume
+        )
 
     @staticmethod
     def high_gain(summary: CoinSummary) -> bool:
@@ -34,7 +36,8 @@ class CoinSelection:
         std = float(summary.std_24h)
         return (
             bool(float(summary.latest_trade) - (mean + std) <= 0)
-            and summary.percentage_std_24h > 0.02
+            and summary.percentage_std_24h > 0.03
+            and summary.is_large_volume
         )
 
     @staticmethod

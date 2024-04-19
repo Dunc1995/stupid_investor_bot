@@ -48,6 +48,7 @@ class CoinSummary:
     std_24h: float
     percentage_change_24h: float
     percentage_std_24h: float
+    volume_traded_24h: float
     is_greater_than_mean: bool
     is_greater_than_std: bool
 
@@ -80,6 +81,10 @@ class CoinSummary:
             bool: True if percentage change is close to zero.
         """
         return self.percentage_change_24h < 0.03 and self.percentage_change_24h > -0.03
+
+    @property
+    def is_large_volume(self) -> bool:
+        return self.volume_traded_24h > 400000.0
 
 
 @dataclass

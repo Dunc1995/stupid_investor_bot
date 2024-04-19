@@ -9,13 +9,11 @@ from stupidinvestorbot import CRYPTO_KEY, CRYPTO_SECRET_KEY, INVESTMENT_INCREMEN
 from stupidinvestorbot.models.app import CoinSummary, OrderSummary, TradingStatus
 from stupidinvestorbot.http.crypto import CryptoHttpClient
 from stupidinvestorbot.models.crypto import Instrument
+import stupidinvestorbot.utils as utils
 import stupidinvestorbot.state as state
 
 logger = logging.getLogger("client")
 crypto = CryptoHttpClient(CRYPTO_KEY, CRYPTO_SECRET_KEY)
-
-# ! Can probably cache this once db is setup - only wanting the quantity tick size from here
-instruments = crypto.market.get_instruments()
 
 
 def has_order_succeeded(order_id: str) -> bool:
@@ -123,6 +121,9 @@ def run(strategy: str = "high_gain"):
     total_investable, number_of_coins = crypto.get_number_of_coins_to_invest_in()
     logger.info(f"Investable amount is: ${round(total_investable, 2)}")
 
+    # ! Can probably cache this once db is setup - only wanting the quantity tick size from here
+    instruments = crypto.market.get_instruments()
+
     # for _coin in state.read_existing_trading_statuses():
     #     order_summary = _coin.order
 
@@ -130,9 +131,9 @@ def run(strategy: str = "high_gain"):
         coin = crypto.select_coin(strategy)
         instrument = next(x for x in instruments if x.symbol == coin.name)
 
-        coin_data = crypto.market.get_ticker(coin.name)
+        ticker_data = crypto.market.get_ticker(coin.name)
 
-        latest_trade = Decimal(coin_data.latest_trade)
+        latest_trade = Decimal(ticker_data.latest_trade)
 
         percentage_change = latest_trade / Decimal(str(coin.latest_trade))
 
@@ -144,7 +145,11 @@ def run(strategy: str = "high_gain"):
             coin.latest_trade = latest_trade
 
             order_summary = purchase_coin(coin, instrument)
+            coin_balance = crypto.get_coin_balance(coin.name)
 
+            order_summary.quantity = utils.correct_coin_quantity(
+                coin_balance.quantity, instrument.qty_tick_size
+            )
             # state.log_trading_status(
             #     TradingStatus(order_summary, True, False, False, False)
             # )

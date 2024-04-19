@@ -49,14 +49,17 @@ class CryptoHttpClient:
             std_24h=std,
             percentage_std_24h=percentage_std,
             percentage_change_24h=float(coin.percentage_change_24h),
+            volume_traded_24h=float(coin.total_traded_volume_usd_24h),
             is_greater_than_mean=bool(float(coin.latest_trade) - mean > 0),
             is_greater_than_std=bool(float(coin.latest_trade) - (mean + std) > 0),
         )
 
+    # TODO naming isn't concise here.
     def get_number_of_coins_to_invest_in(self):
         """
         Get my USD balance and calculate how many coins to invest in.
         """
+
         balance_dict = self.user.get_balance()
 
         balance = UserBalance(**balance_dict)
@@ -76,7 +79,24 @@ class CryptoHttpClient:
 
         return total_investable, number_of_investments
 
-    def select_coin(self, strategy) -> CoinSummary:
+    def get_coin_balance(self, coin_name: str) -> PositionBalance | None:
+        name = coin_name.split("_")[0]
+        balance_dict = self.user.get_balance()
+
+        balance = UserBalance(**balance_dict)
+
+        coin_balance = next(
+            (
+                PositionBalance(**ub)
+                for ub in balance.position_balances
+                if PositionBalance(**ub).instrument_name == name
+            ),
+            None,
+        )
+
+        return coin_balance
+
+    def select_coin(self, strategy) -> CoinSummary | None:
         coin_summary = None
 
         for coin in self.market.get_usd_coins():
