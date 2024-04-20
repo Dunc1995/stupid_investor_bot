@@ -1,8 +1,5 @@
 from stupidinvestorbot.models.app import CoinSummary
 
-STRATEGY_CONSERVATIVE = "Conservative"
-STRATEGY_HIGH_GAIN = "High_Gain"
-
 
 class CoinSelection:
 

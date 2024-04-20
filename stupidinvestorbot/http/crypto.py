@@ -1,20 +1,15 @@
 import logging
 import math
 import datetime as dt
-from typing import Any, Generator, List
 import uuid
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import pandas as pd
-from pandas import DataFrame
 
 from stupidinvestorbot.strategies import CoinSelection
 import stupidinvestorbot.utils as utils
-from stupidinvestorbot import INVESTMENT_INCREMENTS
 from stupidinvestorbot.http.market import MarketHttpClient
 from stupidinvestorbot.http.user import UserHttpClient
-from stupidinvestorbot.models.app import CoinSummary, OrderSummary, Ticker
-from stupidinvestorbot.models.crypto import Order, PositionBalance, UserBalance
+from stupidinvestorbot.models.app import CoinSummary, TradingStatus, Ticker
+from stupidinvestorbot.models.crypto import PositionBalance, UserBalance
 
 
 logger = logging.getLogger("client")
@@ -53,31 +48,6 @@ class CryptoHttpClient:
             is_greater_than_mean=bool(float(coin.latest_trade) - mean > 0),
             is_greater_than_std=bool(float(coin.latest_trade) - (mean + std) > 0),
         )
-
-    # TODO naming isn't concise here.
-    def get_number_of_coins_to_invest_in(self):
-        """
-        Get my USD balance and calculate how many coins to invest in.
-        """
-
-        balance_dict = self.user.get_balance()
-
-        balance = UserBalance(**balance_dict)
-
-        usd_balance = next(
-            (
-                PositionBalance(**ub)
-                for ub in balance.position_balances
-                if PositionBalance(**ub).instrument_name == "USD"
-            ),
-            None,
-        )
-
-        total_investable = float(usd_balance.market_value)
-
-        number_of_investments = math.floor(total_investable / INVESTMENT_INCREMENTS)
-
-        return total_investable, number_of_investments
 
     def get_coin_balance(self, coin_name: str) -> PositionBalance | None:
         name = coin_name.split("_")[0]
@@ -120,7 +90,7 @@ class CryptoHttpClient:
         latest_trade_price_usd: str,
         tick: str,
         dry_run: bool = True,
-    ) -> OrderSummary:
+    ) -> TradingStatus:
         """Purchase a coin with respect to a total investment amount (e.g I want to purchase 20 dollars worth of Bitcoin)
 
         Args:
@@ -145,7 +115,7 @@ class CryptoHttpClient:
                 instrument_name, latest_trade_price_usd, quantity, "BUY"
             )
 
-            order_summary = OrderSummary(
+            order_summary = TradingStatus(
                 order.order_id,
                 order.client_oid,
                 instrument_name,
@@ -153,7 +123,7 @@ class CryptoHttpClient:
                 quantity,
             )
         else:
-            order_summary = OrderSummary(
+            order_summary = TradingStatus(
                 -1,
                 str(uuid.uuid4()),
                 instrument_name,

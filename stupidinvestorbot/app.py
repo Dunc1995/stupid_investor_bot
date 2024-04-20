@@ -6,7 +6,7 @@ from typing import Dict
 
 from crypto_com import MarketClient
 from stupidinvestorbot import CRYPTO_KEY, CRYPTO_SECRET_KEY, INVESTMENT_INCREMENTS
-from stupidinvestorbot.models.app import CoinSummary, OrderSummary, TradingStatus
+from stupidinvestorbot.models.app import CoinSummary, TradingStatus
 from stupidinvestorbot.http.crypto import CryptoHttpClient
 from stupidinvestorbot.models.crypto import Instrument
 import stupidinvestorbot.utils as utils
@@ -16,7 +16,7 @@ logger = logging.getLogger("client")
 crypto = CryptoHttpClient(CRYPTO_KEY, CRYPTO_SECRET_KEY)
 
 
-def has_order_succeeded(order_id: str) -> bool:
+def order_has_succeeded(order_id: str) -> bool:
     logger.info("Order successfully created.")
 
     tries = 0
@@ -43,7 +43,7 @@ def has_order_succeeded(order_id: str) -> bool:
     return is_order_successful
 
 
-def purchase_coin(coin: CoinSummary, coin_props: Instrument) -> OrderSummary:
+def purchase_coin(coin: CoinSummary, coin_props: Instrument) -> TradingStatus:
 
     order_summary = crypto.buy_order(
         coin.name,
@@ -53,14 +53,16 @@ def purchase_coin(coin: CoinSummary, coin_props: Instrument) -> OrderSummary:
         dry_run=False,
     )
 
-    order_succeeded = has_order_succeeded(order_summary.order_id)
+    order_summary.buy_order_created = True
+    state.log_trading_status(order_summary)
 
-    order_summary.succeeded = order_succeeded
+    order_summary.buy_order_fulfilled = order_has_succeeded(order_summary.order_id)
+    state.log_trading_status(order_summary)
 
     return order_summary
 
 
-def sell_coin(order_summary: OrderSummary):
+def sell_coin(order_summary: TradingStatus):
     crypto.user.create_order(
         order_summary.coin_name,
         order_summary.per_coin_price,
@@ -68,7 +70,11 @@ def sell_coin(order_summary: OrderSummary):
         "SELL",
     )
 
-    has_order_succeeded(order_summary.order_id)
+    order_summary.sell_order_created = True
+    state.log_trading_status(order_summary)
+
+    order_summary.sell_order_fulfilled = order_has_succeeded(order_summary.order_id)
+    state.log_trading_status(order_summary)
 
 
 def get_coin_ticker_data(event: Dict):
@@ -76,10 +82,11 @@ def get_coin_ticker_data(event: Dict):
         yield {"name": coin["i"], "price": coin["a"]}
 
 
-async def monitor_coins_loop(order: OrderSummary):
+async def monitor_coins_loop(order: TradingStatus):
     async with MarketClient() as client:
         await client.subscribe([f"ticker.{order.coin_name}"])
 
+        percentage_change = None
         is_waiting = True
 
         while is_waiting:
@@ -89,43 +96,36 @@ async def monitor_coins_loop(order: OrderSummary):
                 for coin in get_coin_ticker_data(event):
                     price = coin["price"]
 
-                    percentage_change = Decimal(price) / Decimal(order.per_coin_price)
+                    _percentage_change = Decimal(price) / Decimal(order.per_coin_price)
 
-                    logger.info(
-                        f"{coin['name']}    Percentage Change: {round(percentage_change * 100, 2)}%"
-                    )
+                    if _percentage_change != percentage_change:
+                        percentage_change = _percentage_change
 
-                    if percentage_change > 1.01:
+                        logger.info(
+                            f"{coin['name']}    Percentage Change: {round(_percentage_change * 100, 2)}%"
+                        )
+
+                    if _percentage_change > 1.01:
                         order.per_coin_price = price
                         sell_coin(order)
                         logger.info(
                             f"Sell order created with the following properties: {order}"
-                        )
-                        state.log_trading_status(
-                            TradingStatus(order, True, True, True, True)
                         )
                         is_waiting = False
             else:
                 logger.info(event)
 
 
-def monitor_coin(order: OrderSummary):
+def monitor_coin(order: TradingStatus):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(monitor_coins_loop(order))
 
 
 def run(strategy: str = "high_gain"):
-    coin: CoinSummary = None
-    instrument: Instrument = None
-    order_summary = None
-    total_investable, number_of_coins = crypto.get_number_of_coins_to_invest_in()
-    logger.info(f"Investable amount is: ${round(total_investable, 2)}")
-
     # ! Can probably cache this once db is setup - only wanting the quantity tick size from here
     instruments = crypto.market.get_instruments()
 
-    # for _coin in state.read_existing_trading_statuses():
-    #     order_summary = _coin.order
+    order_summary = state.get_resumable_trade()
 
     if order_summary is None:
         coin = crypto.select_coin(strategy)
@@ -150,11 +150,8 @@ def run(strategy: str = "high_gain"):
             order_summary.quantity = utils.correct_coin_quantity(
                 coin_balance.quantity, instrument.qty_tick_size
             )
-            # state.log_trading_status(
-            #     TradingStatus(order_summary, True, False, False, False)
-            # )
 
-            if order_summary.succeeded:
+            if order_summary.buy_order_created:
                 logger.info(order_summary)
 
                 monitor_coin(order_summary)

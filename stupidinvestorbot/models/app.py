@@ -88,29 +88,93 @@ class CoinSummary:
 
 
 @dataclass
-class OrderSummary(Order):
+class TradingStatus(Order):
     coin_name: str
     per_coin_price: float
-    quantity: float
-    succeeded: bool = False
+    is_running: bool
+    _quantity: float
+    _buy_order_created: bool = False
+    _buy_order_fulfilled: bool = False
+    _sell_order_created: bool = False
+    _sell_order_fulfilled: bool = False
+    _timestamp: int = None
+    _initial_quantity: float = None
+
+    @property
+    def buy_order_created(self) -> bool:
+        return self._buy_order_created
+
+    @property
+    def buy_order_fulfilled(self) -> bool:
+        return self._buy_order_fulfilled
+
+    @property
+    def sell_order_created(self) -> bool:
+        return self._sell_order_created
+
+    @property
+    def sell_order_fulfilled(self) -> bool:
+        return self._sell_order_fulfilled
+
+    @buy_order_created.setter
+    def buy_order_created(self, x) -> bool:
+        self._buy_order_created = x
+
+    @buy_order_fulfilled.setter
+    def buy_order_fulfilled(self, x) -> bool:
+        if x is True:
+            self._buy_order_created = x
+
+        self._buy_order_fulfilled = x
+
+    @sell_order_created.setter
+    def sell_order_created(self, x) -> bool:
+        if x is True:
+            self._buy_order_created = x
+            self._buy_order_fulfilled = x
+
+        self._sell_order_created = x
+
+    @sell_order_fulfilled.setter
+    def sell_order_fulfilled(self, x) -> bool:
+        if x is True:
+            self._buy_order_created = x
+            self._buy_order_fulfilled = x
+            self._sell_order_created = x
+
+        self._sell_order_fulfilled = x
+
+    @property
+    def is_resumable(self):
+        # TODO this criteria doesn't cover all edge cases in which it's possible to resume the trade
+        return (
+            self._buy_order_created
+            and self._buy_order_fulfilled
+            and not self.sell_order_created
+        )
+
+    @property
+    def quantity(self):
+        return self._quantity
+
+    @property
+    def initial_quantity(self):
+        return self._initial_quantity
+
+    @quantity.setter
+    def quantity(self, x):
+        if self._initial_quantity is None:
+            self._initial_quantity = x
+
+        self._quantity = x
 
     @property
     def total_usd(self):
         return float(self.quantity) * float(self.per_coin_price)
 
-
-@dataclass
-class TradingStatus:
-    order: OrderSummary
-    buy_order_created: bool
-    buy_order_fulfilled: bool
-    sell_order_created: bool
-    sell_order_fulfilled: bool
-    __timestamp: int = None
-
     @property
     def timestamp(self) -> int:
-        if self.__timestamp is None:
-            self.__timestamp = int(time.time())
+        if self._timestamp is None:
+            self._timestamp = int(time.time())
 
-        return self.__timestamp
+        return self._timestamp
