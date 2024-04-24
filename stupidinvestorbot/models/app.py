@@ -48,7 +48,6 @@ class CoinSummary:
     std_24h: float
     percentage_change_24h: float
     percentage_std_24h: float
-    volume_traded_24h: float
     is_greater_than_mean: bool
     is_greater_than_std: bool
 
@@ -82,17 +81,14 @@ class CoinSummary:
         """
         return self.percentage_change_24h < 0.03 and self.percentage_change_24h > -0.03
 
-    @property
-    def is_large_volume(self) -> bool:
-        return self.volume_traded_24h > 400000.0
-
 
 @dataclass
 class TradingStatus(Order):
     coin_name: str
     per_coin_price: float
     is_running: bool
-    _quantity: float
+    sell_strategy: str
+    _quantity: float = None
     _buy_order_created: bool = False
     _buy_order_fulfilled: bool = False
     _sell_order_created: bool = False
@@ -155,6 +151,9 @@ class TradingStatus(Order):
 
     @property
     def quantity(self):
+        if self._quantity is None:
+            raise ValueError("Quantity has not been set.")
+
         return self._quantity
 
     @property

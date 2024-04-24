@@ -1,4 +1,4 @@
-from stupidinvestorbot.models.app import CoinSummary
+from stupidinvestorbot.models.app import CoinSummary, TradingStatus
 
 
 class CoinSelection:
@@ -14,9 +14,7 @@ class CoinSelection:
         Returns:
             bool: True if the coin is volatile but with 0% change in the most recent trade.
         """
-        return (
-            summary.has_high_std and summary.has_low_change and summary.is_large_volume
-        )
+        return summary.has_high_std and summary.has_low_change
 
     @staticmethod
     def high_gain(summary: CoinSummary) -> bool:
@@ -34,7 +32,12 @@ class CoinSelection:
         return (
             bool(float(summary.latest_trade) - (mean + std) <= 0)
             and summary.percentage_std_24h > 0.03
-            and summary.is_large_volume
+        )
+
+    @staticmethod
+    def all_guns_blazing(summary: CoinSummary) -> bool:
+        return (
+            summary.percentage_change_24h > 0.20 and summary.percentage_std_24h > 0.05
         )
 
     @staticmethod
@@ -46,7 +49,27 @@ class CoinSelection:
                 select_coin = CoinSelection.high_gain(summary)
             case "conservative":
                 select_coin = CoinSelection.conservative(summary)
+            case "all_guns_blazing":
+                select_coin = CoinSelection.all_guns_blazing(summary)
             case _:
                 select_coin = False
 
         return select_coin
+
+
+class SellPrice:
+    @staticmethod
+    def get_percentage_increase(status: TradingStatus):
+        percentage_increase = None
+
+        match status.sell_strategy:
+            case "high_gain":
+                percentage_increase = 1.01
+            case "conservative":
+                percentage_increase = 1.01
+            case "all_guns_blazing":
+                percentage_increase = 1.03
+            case _:
+                percentage_increase = 1.01
+
+        return percentage_increase

@@ -20,9 +20,7 @@ class MarketHttpClient(HttpClient):
         data = [
             Ticker(obj)
             for obj in ticker_data
-            if str(obj["i"]).endswith("_USD")
-            and float(obj["c"]) < 0.01
-            and float(obj["c"]) > -0.05
+            if str(obj["i"]).endswith("_USD") and float(obj["vv"]) > 200_000.0
         ]
 
         result = sorted(data, key=lambda x: tuple(x.percentage_change_24h))

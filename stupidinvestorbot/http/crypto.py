@@ -44,7 +44,6 @@ class CryptoHttpClient:
             std_24h=std,
             percentage_std_24h=percentage_std,
             percentage_change_24h=float(coin.percentage_change_24h),
-            volume_traded_24h=float(coin.total_traded_volume_usd_24h),
             is_greater_than_mean=bool(float(coin.latest_trade) - mean > 0),
             is_greater_than_std=bool(float(coin.latest_trade) - (mean + std) > 0),
         )
@@ -89,6 +88,7 @@ class CryptoHttpClient:
         total_price_usd: str,
         latest_trade_price_usd: str,
         tick: str,
+        strategy: str,
         dry_run: bool = True,
     ) -> TradingStatus:
         """Purchase a coin with respect to a total investment amount (e.g I want to purchase 20 dollars worth of Bitcoin)
@@ -116,19 +116,25 @@ class CryptoHttpClient:
             )
 
             order_summary = TradingStatus(
-                order.order_id,
-                order.client_oid,
-                instrument_name,
-                latest_trade_price_usd,
-                quantity,
+                order_id=order.order_id,
+                client_oid=order.client_oid,
+                coin_name=instrument_name,
+                per_coin_price=latest_trade_price_usd,
+                is_running=True,
+                sell_strategy=strategy,
+                _quantity=quantity,
+                _initial_quantity=quantity,
             )
         else:
             order_summary = TradingStatus(
-                -1,
-                str(uuid.uuid4()),
-                instrument_name,
-                latest_trade_price_usd,
-                quantity,
+                order_id=-1,
+                client_oid=str(uuid.uuid4()),
+                coin_name=instrument_name,
+                per_coin_price=latest_trade_price_usd,
+                is_running=True,
+                sell_strategy=strategy,
+                _quantity=quantity,
+                _initial_quantity=quantity,
             )
 
         return order_summary

@@ -22,7 +22,7 @@ def log_trading_status(status: TradingStatus):
 
     with open(
         os.path.join(
-            TRADES_PATH, f"{status.order.coin_name.lower()}_{status.timestamp}.json"
+            TRADES_PATH, f"{status.coin_name.lower()}_{status.timestamp}.json"
         ),
         "w+",
     ) as f:
@@ -38,6 +38,8 @@ def get_resumable_trade() -> TradingStatus | None:
     create_directory()
 
     for file_name in os.listdir(TRADES_PATH):
+        if len(file_name.split(".")) > 1 and file_name.split(".")[1] != "json":
+            continue
 
         with open(os.path.join(TRADES_PATH, file_name), "r") as f:
             status_dict = json.loads(f.read())

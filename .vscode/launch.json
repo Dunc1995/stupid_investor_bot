@@ -11,7 +11,7 @@
             "module": "stupidinvestorbot",
             "cwd": "${workspaceFolder}",
             "args": [
-                "main"
+                "run"
             ]
         }
     ]
